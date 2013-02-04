@@ -329,6 +329,14 @@ static const struct dmi_system_id __initconst i8042_dmi_nomux_table[] = {
 		},
 	},
 	{
+	         
+	         /* Sony Vaio VPCZ122GX */
+                .matches = {
+                        DMI_MATCH(DMI_SYS_VENDOR, "Sony Corporation"),
+                        DMI_MATCH(DMI_PRODUCT_NAME, "VPCZ122GX"),
+                },
+        },
+        {
 		/*
 		 * Sony Vaio FZ-240E -
 		 * reset and GET ID commands issued via KBD port are

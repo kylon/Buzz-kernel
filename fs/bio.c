@@ -370,6 +370,9 @@ static void bio_kmalloc_destructor(struct bio *bio)
 struct bio *bio_kmalloc(gfp_t gfp_mask, int nr_iovecs)
 {
 	struct bio *bio;
+	
+	if (nr_iovecs > UIO_MAXIOV)
+                return NULL;
 
 	bio = kmalloc(sizeof(struct bio) + nr_iovecs * sizeof(struct bio_vec),
 		      gfp_mask);
@@ -701,8 +704,12 @@ static void bio_free_map_data(struct bio_map_data *bmd)
 static struct bio_map_data *bio_alloc_map_data(int nr_segs, int iov_count,
 					       gfp_t gfp_mask)
 {
-	struct bio_map_data *bmd = kmalloc(sizeof(*bmd), gfp_mask);
-
+	struct bio_map_data *bmd;
+ 
+        if (iov_count > UIO_MAXIOV)
+                return NULL;
+ 
+        bmd = kmalloc(sizeof(*bmd), gfp_mask);
 	if (!bmd)
 		return NULL;
 
@@ -830,6 +837,12 @@ struct bio *bio_copy_user_iov(struct request_queue *q,
 		uaddr = (unsigned long)iov[i].iov_base;
 		end = (uaddr + iov[i].iov_len + PAGE_SIZE - 1) >> PAGE_SHIFT;
 		start = uaddr >> PAGE_SHIFT;
+		
+		/*
+                 * Overflow, abort
+                 */
+                if (end < start)
+                        return ERR_PTR(-EINVAL);
 
 		nr_pages += end - start;
 		len += iov[i].iov_len;
@@ -957,6 +970,12 @@ static struct bio *__bio_map_user_iov(struct request_queue *q,
 		unsigned long len = iov[i].iov_len;
 		unsigned long end = (uaddr + len + PAGE_SIZE - 1) >> PAGE_SHIFT;
 		unsigned long start = uaddr >> PAGE_SHIFT;
+		
+		/*
+                 * Overflow, abort
+                 */
+                if (end < start)
+                        return ERR_PTR(-EINVAL);
 
 		nr_pages += end - start;
 		/*
