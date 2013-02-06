@@ -1,7 +1,7 @@
 /*
  * Automatically generated C config: don't edit
- * Linux kernel version: 2.6.32.24
- * Thu Jan 31 22:19:54 2013
+ * Linux kernel version: 2.6.32.27
+ * Wed Feb  6 11:01:22 2013
  */
 #define AUTOCONF_INCLUDED
 #define CONFIG_VIDEO_V4L1_COMPAT 1
