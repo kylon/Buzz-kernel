@@ -344,6 +344,17 @@ static int  option_resume(struct usb_serial *serial);
 #define HAIER_VENDOR_ID				0x201e
 #define HAIER_PRODUCT_CE100			0x2009
 
+/* Cinterion (formerly Siemens) products */
+#define SIEMENS_VENDOR_ID                              0x0681
+#define CINTERION_VENDOR_ID                            0x1e2d
+#define CINTERION_PRODUCT_HC25_MDM             0x0047
+#define CINTERION_PRODUCT_HC25_MDMNET  0x0040
+#define CINTERION_PRODUCT_HC28_MDM             0x004C
+#define CINTERION_PRODUCT_HC28_MDMNET  0x004A /* same for HC28J */
+#define CINTERION_PRODUCT_EU3_E                        0x0051
+#define CINTERION_PRODUCT_EU3_P                        0x0052
+#define CINTERION_PRODUCT_PH8                  0x0053
+
 static struct usb_device_id option_ids[] = {
 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_COLT) },
 	{ USB_DEVICE(OPTION_VENDOR_ID, OPTION_PRODUCT_RICOLA) },
@@ -662,6 +673,16 @@ static struct usb_device_id option_ids[] = {
 	{ USB_DEVICE(TLAYTECH_VENDOR_ID, TLAYTECH_PRODUCT_TEU800) },
 	{ USB_DEVICE(FOUR_G_SYSTEMS_VENDOR_ID, FOUR_G_SYSTEMS_PRODUCT_W14) },
 	{ USB_DEVICE(HAIER_VENDOR_ID, HAIER_PRODUCT_CE100) },
+	/* Cinterion */
+        { USB_DEVICE(CINTERION_VENDOR_ID, CINTERION_PRODUCT_EU3_E) },
+        { USB_DEVICE(CINTERION_VENDOR_ID, CINTERION_PRODUCT_EU3_P) },
+        { USB_DEVICE(CINTERION_VENDOR_ID, CINTERION_PRODUCT_PH8) },
+        { USB_DEVICE(CINTERION_VENDOR_ID, CINTERION_PRODUCT_HC28_MDM) },
+        { USB_DEVICE(CINTERION_VENDOR_ID, CINTERION_PRODUCT_HC28_MDMNET) },
+        { USB_DEVICE(SIEMENS_VENDOR_ID, CINTERION_PRODUCT_HC25_MDM) },
+        { USB_DEVICE(SIEMENS_VENDOR_ID, CINTERION_PRODUCT_HC25_MDMNET) },
+        { USB_DEVICE(SIEMENS_VENDOR_ID, CINTERION_PRODUCT_HC28_MDM) }, /* HC28 enumerates with Siemens or Cinterion VID depending on FW revision */
+        { USB_DEVICE(SIEMENS_VENDOR_ID, CINTERION_PRODUCT_HC28_MDMNET) },
 	{ } /* Terminating entry */
 };
 MODULE_DEVICE_TABLE(usb, option_ids);
