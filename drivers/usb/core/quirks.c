@@ -53,6 +53,10 @@ static const struct usb_device_id usb_quirk_list[] = {
 	/* Avision AV600U */
 	{ USB_DEVICE(0x0638, 0x0a13), .driver_info =
 	  USB_QUIRK_STRING_FETCH_255 },
+	  
+	/* Samsung Android phone modem - ID conflict with SPH-I500 */
+        { USB_DEVICE(0x04e8, 0x6601), .driver_info =
+                        USB_QUIRK_CONFIG_INTF_STRINGS },
 
 	/* Saitek Cyborg Gold Joystick */
 	{ USB_DEVICE(0x06a3, 0x0006), .driver_info =
@@ -60,6 +64,10 @@ static const struct usb_device_id usb_quirk_list[] = {
 
 	/* M-Systems Flash Disk Pioneers */
 	{ USB_DEVICE(0x08ec, 0x1000), .driver_info = USB_QUIRK_RESET_RESUME },
+	
+	/* Keytouch QWERTY Panel keyboard */
+        { USB_DEVICE(0x0926, 0x3333), .driver_info =
+                        USB_QUIRK_CONFIG_INTF_STRINGS },
 
 	/* X-Rite/Gretag-Macbeth Eye-One Pro display colorimeter */
 	{ USB_DEVICE(0x0971, 0x2000), .driver_info = USB_QUIRK_NO_SET_INTF },

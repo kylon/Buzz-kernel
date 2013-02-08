@@ -188,7 +188,7 @@ static struct ocfs2_live_connection *ocfs2_connection_find(const char *name)
 	list_for_each_entry(c, &ocfs2_live_connection_list, oc_list) {
 		if ((c->oc_conn->cc_namelen == len) &&
 		    !strncmp(c->oc_conn->cc_name, name, len))
-			return c;
+			return NULL;
 	}
 
 	return c;

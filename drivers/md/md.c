@@ -304,6 +304,9 @@ static void mddev_put(mddev_t *mddev)
 static mddev_t * mddev_find(dev_t unit)
 {
 	mddev_t *mddev, *new = NULL;
+	
+	if (unit && MAJOR(unit) != MD_MAJOR)
+                unit &= ~((1<<MdpMinorShift)-1);
 
  retry:
 	spin_lock(&all_mddevs_lock);
