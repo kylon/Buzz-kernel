@@ -175,7 +175,8 @@ static int dao_set_left_input(struct dao *dao, struct rsc *input)
 	entry = kzalloc((sizeof(*entry) * daio->rscl.msr), GFP_KERNEL);
 	if (!entry)
 		return -ENOMEM;
-
+        
+        dao->ops->clear_left_input(dao);
 	/* Program master and conjugate resources */
 	input->ops->master(input);
 	daio->rscl.ops->master(&daio->rscl);
@@ -203,7 +204,8 @@ static int dao_set_right_input(struct dao *dao, struct rsc *input)
 	entry = kzalloc((sizeof(*entry) * daio->rscr.msr), GFP_KERNEL);
 	if (!entry)
 		return -ENOMEM;
-
+         
+         dao->ops->clear_right_input(dao);
 	/* Program master and conjugate resources */
 	input->ops->master(input);
 	daio->rscr.ops->master(&daio->rscr);
