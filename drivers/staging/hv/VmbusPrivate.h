@@ -32,7 +32,7 @@
 #include "ChannelInterface.h"
 #include "RingBuffer.h"
 #include <linux/list.h>
-
+#include <asm/sync_bitops.h>
 
 /*
  * Maximum channels is determined by the size of the interrupt page
