@@ -635,6 +635,13 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
 	ioc->ctl_cmds.smid = smid;
 	data_out_sz = karg.data_out_size;
 	data_in_sz = karg.data_in_size;
+	
+	/* Check for overflow and wraparound */
+        if (karg.data_sge_offset * 4 > ioc->request_sz ||
+            karg.data_sge_offset > (UINT_MAX / 4)) {
+                ret = -EINVAL;
+                goto out;
+        }
 
 	/* copy in request message frame from user */
 	if (copy_from_user(mpi_request, mf, karg.data_sge_offset*4)) {
@@ -1809,7 +1816,7 @@ _ctl_diag_read_buffer(void __user *arg, enum block_state state)
 	Mpi2DiagBufferPostReply_t *mpi_reply;
 	int rc, i;
 	u8 buffer_type;
-	unsigned long timeleft;
+	unsigned long timeleft, request_size, copy_size;
 	u16 smid;
 	u16 ioc_status;
 	u8 issue_reset = 0;
@@ -1851,14 +1858,24 @@ _ctl_diag_read_buffer(void __user *arg, enum block_state state)
 		    __func__);
 		return -EINVAL;
 	}
+	
+	if (karg.starting_offset > request_size)
+                return -EINVAL;
 
 	diag_data = (void *)(request_data + karg.starting_offset);
 	dctlprintk(ioc, printk(MPT2SAS_DEBUG_FMT "%s: diag_buffer(%p), "
 	    "offset(%d), sz(%d)\n", ioc->name, __func__,
 	    diag_data, karg.starting_offset, karg.bytes_to_read));
+	
+	/* Truncate data on requests that are too large */
+        if ((diag_data + karg.bytes_to_read < diag_data) ||
+            (diag_data + karg.bytes_to_read > request_data + request_size))
+                copy_size = request_size - karg.starting_offset;
+        else
+                copy_size = karg.bytes_to_read;
 
 	if (copy_to_user((void __user *)uarg->diagnostic_data,
-	    diag_data, karg.bytes_to_read)) {
+	    diag_data, copy_size)) {
 		printk(MPT2SAS_ERR_FMT "%s: Unable to write "
 		    "mpt_diag_read_buffer_t data @ %p\n", ioc->name,
 		    __func__, diag_data);
