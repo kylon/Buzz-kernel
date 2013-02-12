@@ -1,7 +1,7 @@
 /*
  * Automatically generated C config: don't edit
- * Linux kernel version: 2.6.32.31
- * Fri Feb  8 14:55:13 2013
+ * Linux kernel version: 2.6.32.41
+ * Tue Feb 12 15:29:02 2013
  */
 #define AUTOCONF_INCLUDED
 #define CONFIG_VIDEO_V4L1_COMPAT 1
@@ -532,7 +532,6 @@
 #define CONFIG_ARM_THUMB 1
 #define CONFIG_INOTIFY_USER 1
 #define CONFIG_CRYPTO_CRC32C 1
-#define CONFIG_FORCE_WARNING_AS_ERROR 1
 #define CONFIG_ANDROID_RAM_CONSOLE_ERROR_CORRECTION_SYMBOL_SIZE 8
 #define CONFIG_CPU_FREQ_DEFAULT_GOV_INTERACTIVE 1
 #define CONFIG_MSM7X00A_IDLE_SPIN_TIME 80000

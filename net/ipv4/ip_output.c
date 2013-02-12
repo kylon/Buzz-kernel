@@ -864,7 +864,7 @@ int ip_append_data(struct sock *sk,
 	    length + fragheaderlen <= mtu &&
 	    rt->u.dst.dev->features & NETIF_F_V4_CSUM &&
 	    !exthdrlen)
-		csummode = CHECKSUM_PARTIAL
+		csummode = CHECKSUM_PARTIAL;
 		
 		skb = skb_peek_tail(&sk->sk_write_queue);
 
