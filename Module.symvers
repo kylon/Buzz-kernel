@@ -3018,6 +3018,7 @@
 0x00000000	v4l2_device_unregister	vmlinux	EXPORT_SYMBOL_GPL
 0x00000000	tty_insert_flip_string_flags	vmlinux	EXPORT_SYMBOL
 0x00000000	blk_unplug	vmlinux	EXPORT_SYMBOL
+0x00000000	address_space_init_once	vmlinux	EXPORT_SYMBOL
 0x00000000	prepare_to_wait_exclusive	vmlinux	EXPORT_SYMBOL
 0x00000000	bt_sock_ioctl	vmlinux	EXPORT_SYMBOL
 0x00000000	inet_dev_addr_type	vmlinux	EXPORT_SYMBOL
