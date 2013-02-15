@@ -15,6 +15,7 @@
 #include <linux/module.h>
 #include <linux/skbuff.h>
 #include <linux/random.h>
+#include <net/secure_seq.h>
 
 #include <net/icmp.h>
 #include <net/inet_common.h>

@@ -136,3 +136,11 @@
 /* Sanwa KB-USB2 multimeter cable (ID: 11ad:0001) */
 #define SANWA_VENDOR_ID		0x11ad
 #define SANWA_PRODUCT_ID	0x0001
+
+/* ADLINK ND-6530 RS232,RS485 and RS422 adapter */
+#define ADLINK_VENDOR_ID               0x0b63
+#define ADLINK_ND6530_PRODUCT_ID       0x6530
+
+/* WinChipHead USB->RS 232 adapter */
+#define WINCHIPHEAD_VENDOR_ID          0x4348
+#define WINCHIPHEAD_USBSER_PRODUCT_ID  0x5523

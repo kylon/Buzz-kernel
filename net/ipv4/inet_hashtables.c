@@ -17,6 +17,7 @@
 #include <linux/random.h>
 #include <linux/sched.h>
 #include <linux/slab.h>
+#include <net/secure_seq.h>
 #include <linux/wait.h>
 
 #include <net/inet_connection_sock.h>

@@ -2293,6 +2293,9 @@ void ieee80211_sta_quiesce(struct ieee80211_sub_if_data *sdata)
 void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
 {
 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+        
+        if (!ifmgd->associated)
+                return;
 
 	if (test_and_clear_bit(TMR_RUNNING_TIMER, &ifmgd->timers_running))
 		add_timer(&ifmgd->timer);
@@ -2305,7 +2308,7 @@ void ieee80211_sta_restart(struct ieee80211_sub_if_data *sdata)
 void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
 {
 	struct ieee80211_if_managed *ifmgd;
-
+         
 	ifmgd = &sdata->u.mgd;
 	INIT_WORK(&ifmgd->work, ieee80211_sta_work);
 	INIT_WORK(&ifmgd->monitor_work, ieee80211_sta_monitor_work);
