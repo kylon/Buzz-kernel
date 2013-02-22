@@ -65,6 +65,7 @@
 #define IRQF_ONESHOT		0x00002000
 #define IRQF_FORCE_RESUME      0x00008000
 
+
 /*
  * Bits used by threaded handlers:
  * IRQTF_RUNTHREAD - signals that the interrupt handler thread should run

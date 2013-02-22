@@ -3028,11 +3028,11 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
 	i = 0;
 	if (info->attrs[NL80211_ATTR_SCAN_SSIDS]) {
 		nla_for_each_nested(attr, info->attrs[NL80211_ATTR_SCAN_SSIDS], tmp) {
-		        request->ssids[i].ssid_len = nla_len(attr);
-			if (request->ssids[i].ssid_len > IEEE80211_MAX_SSID_LEN) {
+		        if (nla_len(attr) > IEEE80211_MAX_SSID_LEN) {
 				err = -EINVAL;
 				goto out_free;
 			}
+			request->ssids[i].ssid_len = nla_len(attr);
 			memcpy(request->ssids[i].ssid, nla_data(attr), nla_len(attr));
 			i++;
 		}
@@ -3363,10 +3363,13 @@ static int nl80211_crypto_settings(struct genl_info *info,
 
 		if (settings->n_ciphers_pairwise > cipher_limit)
 			return -EINVAL;
+                
+                if (settings->n_akm_suites > NL80211_MAX_NR_AKM_SUITES)
+                        return -EINVAL;
 
 		memcpy(settings->ciphers_pairwise, data, len);
 
-		for (i = 0; i < settings->n_ciphers_pairwise; i++)
+		for (i = 0; i < settings->n_akm_suites; i++)
 			if (!nl80211_valid_cipher_suite(
 					settings->ciphers_pairwise[i]))
 				return -EINVAL;
