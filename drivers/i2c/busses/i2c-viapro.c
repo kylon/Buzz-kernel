@@ -330,7 +330,7 @@ static int __devinit vt596_probe(struct pci_dev *pdev,
 				 const struct pci_device_id *id)
 {
 	unsigned char temp;
-	int error = -ENODEV;
+	int error;
 
 	/* Determine the address of the SMBus areas */
 	if (force_addr) {
@@ -359,6 +359,7 @@ static int __devinit vt596_probe(struct pci_dev *pdev,
 		dev_err(&pdev->dev, "SMBus base address "
 			"uninitialized - upgrade BIOS or use "
 			"force_addr=0xaddr\n");
+		error = -ENODEV;
 		return -ENODEV;
 	}
 
@@ -428,9 +429,11 @@ found:
 		 "SMBus Via Pro adapter at %04x", vt596_smba);
 
 	vt596_pdev = pci_dev_get(pdev);
-	if (i2c_add_adapter(&vt596_adapter)) {
+	error = i2c_add_adapter(&vt596_adapter);
+        if (error) {
 		pci_dev_put(vt596_pdev);
 		vt596_pdev = NULL;
+		goto release_region;
 	}
 
 	/* Always return failure here.  This is to allow other drivers to bind

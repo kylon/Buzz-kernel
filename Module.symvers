@@ -3512,6 +3512,7 @@
 0x00000000	dm_unregister_target	vmlinux	EXPORT_SYMBOL
 0x00000000	tty_init_termios	vmlinux	EXPORT_SYMBOL_GPL
 0x00000000	timed_output_dev_unregister	vmlinux	EXPORT_SYMBOL_GPL
+0x00000000	scsi_cmd_blk_ioctl	vmlinux	EXPORT_SYMBOL
 0x00000000	crypto_alloc_instance2	vmlinux	EXPORT_SYMBOL_GPL
 0x00000000	read_dev_sector	vmlinux	EXPORT_SYMBOL
 0x00000000	debugfs_create_x16	vmlinux	EXPORT_SYMBOL_GPL

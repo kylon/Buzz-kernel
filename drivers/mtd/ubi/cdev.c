@@ -627,6 +627,9 @@ static int verify_mkvol_req(const struct ubi_device *ubi,
 	n = req->alignment & (ubi->min_io_size - 1);
 	if (req->alignment != 1 && n)
 		goto bad;
+	
+	if (!req->name[0] || !req->name_len)
+                goto bad;
 
 	if (req->name_len > UBI_VOL_NAME_MAX) {
 		err = -ENAMETOOLONG;
