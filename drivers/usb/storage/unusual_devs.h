@@ -1862,6 +1862,13 @@ UNUSUAL_DEV(  0x4102, 0x1020, 0x0100,  0x0100,
 		US_SC_DEVICE, US_PR_DEVICE, NULL,
 		US_FL_IGNORE_RESIDUE ),
 
+/* Reported by Qinglin Ye <yestyle@gmail.com> */
++UNUSUAL_DEV(  0x13fe, 0x3600, 0x0100, 0x0100,
++               "Kingston",
++               "DT 101 G2",
++               US_SC_DEVICE, US_PR_DEVICE, NULL,
++               US_FL_BULK_IGNORE_TAG ),
+
 /* Reported by Sergey Pinaev <dfo@antex.ru> */
 UNUSUAL_DEV(  0x4102, 0x1059, 0x0000,  0x0000,
                "iRiver",
