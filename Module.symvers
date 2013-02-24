@@ -832,6 +832,7 @@
 0x00000000	div64_u64	vmlinux	EXPORT_SYMBOL
 0x00000000	ioport_unmap	vmlinux	EXPORT_SYMBOL
 0x00000000	d_validate	vmlinux	EXPORT_SYMBOL
+0x00000000	__get_user_pages_fast	vmlinux	EXPORT_SYMBOL_GPL
 0x00000000	down_trylock	vmlinux	EXPORT_SYMBOL
 0x00000000	__init_rwsem	vmlinux	EXPORT_SYMBOL
 0x00000000	genl_register_family	vmlinux	EXPORT_SYMBOL
