@@ -1551,6 +1551,7 @@
 0x00000000	simple_fill_super	vmlinux	EXPORT_SYMBOL
 0x00000000	have_submounts	vmlinux	EXPORT_SYMBOL
 0x00000000	printk_timed_ratelimit	vmlinux	EXPORT_SYMBOL
+0x00000000	sock_queue_err_skb	vmlinux	EXPORT_SYMBOL
 0x00000000	__tasklet_schedule	vmlinux	EXPORT_SYMBOL
 0x00000000	rtnl_trylock	vmlinux	EXPORT_SYMBOL
 0x00000000	dev_load	vmlinux	EXPORT_SYMBOL

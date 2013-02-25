@@ -338,7 +338,7 @@ void __udp6_lib_err(struct sk_buff *skb, struct inet6_skb_parm *opt,
 		goto out;
 
 	if (np->recverr)
-		ipv6_icmp_error(sk, skb, err, uh->dest, ntohl(info), (u8 *)(uh+1));
+                ipv6_icmp_error(sk, skb, err, uh->dest, ntohl(info), (u8 *)(uh+1));
 
 	sk->sk_err = err;
 	sk->sk_error_report(sk);
