@@ -1238,8 +1238,7 @@ static int set_serial_info(struct tty_struct *tty,
 		goto check_and_exit;
 	}
 
-	if ((new_serial.baud_base != priv->baud_base) &&
-	    (new_serial.baud_base < 9600)) {
+	if (new_serial.baud_base != priv->baud_base) {
 	    	unlock_kernel();
 		return -EINVAL;
 	}
@@ -1721,6 +1720,7 @@ static int ftdi_submit_read_urb(struct usb_serial_port *port, gfp_t mem_flags)
 
 static int ftdi_open(struct tty_struct *tty, struct usb_serial_port *port)
 { /* ftdi_open */
+        struct ktermios dummy;
 	struct usb_device *dev = port->serial->dev;
 	struct ftdi_private *priv = usb_get_serial_port_data(port);
 	unsigned long flags;
@@ -1748,8 +1748,10 @@ static int ftdi_open(struct tty_struct *tty, struct usb_serial_port *port)
 	   This is same behaviour as serial.c/rs_open() - Kuba */
 
 	/* ftdi_set_termios  will send usb control messages */
-	if (tty)
-		ftdi_set_termios(tty, port, tty->termios);
+	if (tty) {
+                memset(&dummy, 0, sizeof(dummy));
+                ftdi_set_termios(tty, port, &dummy);
+        }
 
 	/* Not throttled */
 	spin_lock_irqsave(&port->lock, flags);

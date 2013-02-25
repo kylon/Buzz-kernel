@@ -1517,6 +1517,7 @@
 0x00000000	napi_get_frags	vmlinux	EXPORT_SYMBOL
 0x00000000	sk_stream_write_space	vmlinux	EXPORT_SYMBOL
 0x00000000	sysdev_resume	vmlinux	EXPORT_SYMBOL_GPL
+0x00000000	scsi_verify_blk_ioctl	vmlinux	EXPORT_SYMBOL
 0x00000000	sysfs_notify_dirent	vmlinux	EXPORT_SYMBOL_GPL
 0x00000000	ipv6_dup_options	vmlinux	EXPORT_SYMBOL_GPL
 0x00000000	add_mtd_blktrans_dev	vmlinux	EXPORT_SYMBOL_GPL
