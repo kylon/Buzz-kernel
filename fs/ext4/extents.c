@@ -345,7 +345,9 @@ static int ext4_valid_extent(struct inode *inode, struct ext4_extent *ext)
 {
 	ext4_fsblk_t block = ext_pblock(ext);
 	int len = ext4_ext_get_actual_len(ext);
-
+        
+        if (len == 0)
+                return 0;
 	return ext4_data_block_valid(EXT4_SB(inode->i_sb), block, len);
 }
 
@@ -353,7 +355,7 @@ static int ext4_valid_extent_idx(struct inode *inode,
 				struct ext4_extent_idx *ext_idx)
 {
 	ext4_fsblk_t block = idx_pblock(ext_idx);
-
+        
 	return ext4_data_block_valid(EXT4_SB(inode->i_sb), block, 1);
 }
 

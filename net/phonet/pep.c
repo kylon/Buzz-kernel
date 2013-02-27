@@ -850,6 +850,9 @@ static int pep_sendmsg(struct kiocb *iocb, struct sock *sk,
 	long timeo;
 	int flags = msg->msg_flags;
 	int err, done;
+	
+	if (len > 65535)
+                return -EMSGSIZE;
 
 	if (msg->msg_flags & MSG_OOB || !(msg->msg_flags & MSG_EOR))
 		return -EOPNOTSUPP;

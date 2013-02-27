@@ -718,7 +718,9 @@ static ssize_t cache_do_downcall(char *kaddr, const char __user *buf,
 				 size_t count, struct cache_detail *cd)
 {
 	ssize_t ret;
-
+        
+        if (count == 0)
+                return -EINVAL;
 	if (copy_from_user(kaddr, buf, count))
 		return -EFAULT;
 	kaddr[count] = '\0';
