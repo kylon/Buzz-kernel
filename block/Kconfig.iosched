@@ -12,15 +12,23 @@ config IOSCHED_NOOP
 	  that do their own scheduling and require only minimal assistance from
 	  the kernel.
 
-config IOSCHED_AS
-	tristate "Anticipatory I/O scheduler"
+config IOSCHED_SIO
+	tristate "Simple I/O scheduler"
 	default y
 	---help---
-	  The anticipatory I/O scheduler is generally a good choice for most
-	  environments, but is quite large and complex when compared to the
-	  deadline I/O scheduler, it can also be slower in some cases
-	  especially some database loads.
+	  The Simple I/O scheduler is an extremely simple scheduler,
+	  based on noop and deadline, that relies on deadlines to
+	  ensure fairness. The algorithm does not do any sorting but
+	  basic merging, trying to keep a minimum overhead. It is aimed
+	  mainly for aleatory access devices (eg: flash devices).
 
+config IOSCHED_VR
+	tristate "V(R) I/O scheduler"
+	default n
+	---help---
+	  Requests are chosen according to SSTF with a penalty of rev_penalty
+	  for switching head direction.
+	  
 config IOSCHED_DEADLINE
 	tristate "Deadline I/O scheduler"
 	default y
@@ -69,8 +77,8 @@ choice
 	  Select the I/O scheduler which will be used by default for all
 	  block devices.
 
-	config DEFAULT_AS
-		bool "Anticipatory" if IOSCHED_AS=y
+	config DEFAULT_SIO
+		bool "SIO" if IOSCHED_SIO=y
 
 	config DEFAULT_DEADLINE
 		bool "Deadline" if IOSCHED_DEADLINE=y
@@ -83,16 +91,20 @@ choice
 
 	config DEFAULT_NOOP
 		bool "No-op"
+	
+	config DEFAULT_VR
+		bool "V(R)" if IOSCHED_VR=y
 
 endchoice
 
 config DEFAULT_IOSCHED
 	string
-	default "anticipatory" if DEFAULT_AS
+	default "sio" if DEFAULT_SIO
 	default "deadline" if DEFAULT_DEADLINE
 	default "cfq" if DEFAULT_CFQ
 	default "bfq" if DEFAULT_BFQ
 	default "noop" if DEFAULT_NOOP
+	default "vr" if DEFAULT_VR
 
 endmenu
 
