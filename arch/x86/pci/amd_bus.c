@@ -3,7 +3,6 @@
 #include <linux/topology.h>
 #include <linux/cpu.h>
 #include <asm/pci_x86.h>
-#include <asm/k8.h>
 
 #ifdef CONFIG_X86_64
 #include <asm/pci-direct.h>

@@ -2296,9 +2296,6 @@ long kvm_arch_vm_ioctl(struct file *filp,
                 r = -EEXIST;
                 if (kvm->arch.vpic)
                         goto create_irqchip_unlock;
-                r = -EINVAL;
-                if (atomic_read(&kvm->online_vcpus))
-                        goto create_irqchip_unlock;
 		r = -ENOMEM;
 		vpic = kvm_create_pic(kvm);
                 if (vpic) {
