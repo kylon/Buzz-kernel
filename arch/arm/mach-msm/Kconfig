@@ -72,14 +72,6 @@ config NAND_PROTECTION_HACK
 	  This option is used to disable the protection on system partition
 	  orignialy for the Tattoo.
 
-config TURBO_MODE
-	bool "Turbo mode"
-	depends on ARCH_MSM7225 || ARCH_MSM7X00A
-	default n
-	help
-	  This option is used to indicate hardware support for running the
-	  memory bus at a higher speed.(only for 7X00A/7225)
-
 config PERFLOCK
 	depends on CPU_FREQ
 	depends on ARCH_QSD8X50 || ARCH_MSM7X30 || ARCH_MSM7X00A || ARCH_MSM7227 || ARCH_MSM7225

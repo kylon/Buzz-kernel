@@ -1,7 +1,7 @@
 /*
  * Automatically generated C config: don't edit
  * Linux kernel version: 2.6.32.60
- * Thu Feb 28 21:06:35 2013
+ * Fri Mar  1 15:24:30 2013
  */
 #define AUTOCONF_INCLUDED
 #define CONFIG_VIDEO_V4L1_COMPAT 1
@@ -58,7 +58,6 @@
 #define CONFIG_PPPOLAC 1
 #define CONFIG_MTD_MAP_BANK_WIDTH_4 1
 #define CONFIG_CPU_FREQ_STAT 1
-#define CONFIG_TURBO_MODE 1
 #define CONFIG_NET_EMATCH_U32 1
 #define CONFIG_NETFILTER_XT_MATCH_TIME 1
 #define CONFIG_NETFILTER_XT_TARGET_LED 1
