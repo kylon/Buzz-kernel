@@ -61,13 +61,6 @@
 extern int wifi_get_dot11n_enable(void);
 extern int usb_get_connect_type(void); // msm72k_udc.c
 
-#ifdef BCM4329_LOW_POWER
-extern char gatewaybuf[8];
-char ip_str[32];
-bool hasDLNA = false;
-bool allowMulticast = false;
-#endif
-
 typedef struct dhd_prot {
 	uint16 reqid;
 	uint8 pending;
@@ -679,16 +672,8 @@ static int dhd_set_pfn(dhd_pub_t *dhd, int enabled)
 void wl_iw_set_screen_off(int off);
 static dhd_pub_t *pdhd = NULL;
 
-#ifdef BCM4329_LOW_POWER
-int dhd_set_keepalive(int value);
-#endif
-
 int dhd_set_suspend(int value, dhd_pub_t *dhd)
 {
-#ifdef BCM4329_LOW_POWER
-int ignore_bcmc = 1;
-char iovbuf[32];
-#endif
 	/* int power_mode = PM_MAX; */
 #if 0
 	wl_pkt_filter_enable_t	enable_parm;
@@ -717,25 +702,9 @@ char iovbuf[32];
 			}
 #endif
 
-#ifdef BCM4329_LOW_POWER			
-             if (!hasDLNA && !allowMulticast)
-             {
-        			/* ignore broadcast and multicast packet*/
-        			bcm_mkiovar("pm_ignore_bcmc", (char *)&ignore_bcmc,
-        				4, iovbuf, sizeof(iovbuf));
-        			dhdcdc_set_ioctl(dhd, 0, WLC_SET_VAR, iovbuf, sizeof(iovbuf));			
-        			/* keep alive packet*/
-        			dhd_set_keepalive(1);
-		      }
-#endif
-
 #ifdef WLAN_PFN
 			/* set pfn */
 			dhd_set_pfn(dhd, 1);
-#endif
-
-#ifdef MMC_RECOVER
-			dhdsdio_set_mmc_recover(1);
 #endif
 			/* indicate wl_iw screen off */
 			wl_iw_set_screen_off(1);
@@ -761,21 +730,8 @@ char iovbuf[32];
 			dhdcdc_set_ioctl(dhd, 0, WLC_SET_VAR, iovbuf, sizeof(iovbuf));
 #endif
 
-#ifdef BCM4329_LOW_POWER	
-					ignore_bcmc = 0;
-        			/* Not ignore broadcast and multicast packet*/
-        			bcm_mkiovar("pm_ignore_bcmc", (char *)&ignore_bcmc,
-        				4, iovbuf, sizeof(iovbuf));
-        			dhdcdc_set_ioctl(dhd, 0, WLC_SET_VAR, iovbuf, sizeof(iovbuf));			
-        			/* Disable keep alive packet*/
-        			dhd_set_keepalive(0);
-#endif
-
 #ifdef WLAN_PFN
 			dhd_set_pfn(dhd, 0);
-#endif
-#ifdef MMC_RECOVER
-			dhdsdio_set_mmc_recover(0);
 #endif
 			/* indicate wl_iw screen on */
 			wl_iw_set_screen_off(0);
@@ -813,70 +769,6 @@ wl_pattern_atoh(char *src, char *dst)
 	return i;
 }
 
-#ifdef BCM4329_LOW_POWER
-int dhd_set_keepalive(int value)
-{
-    char *str;
-    int						str_len;
-    int   buf_len;
-    char buf[256];
-    wl_keep_alive_pkt_t keep_alive_pkt;
-    wl_keep_alive_pkt_t *keep_alive_pktp;
-    char mac_buf[16];
-    dhd_pub_t *dhd = pdhd;
-	
-    /* Set keep-alive attributes */
-    str = "keep_alive";
-    str_len = strlen(str);
-    strncpy(buf, str, str_len);
-    buf[str_len] = '\0';
-    buf_len = str_len + 1;
-    
-    keep_alive_pktp = (wl_keep_alive_pkt_t *) (buf + str_len + 1);
-    
-    if (value == 0) {
-    	keep_alive_pkt.period_msec = htod32(60000); // Default 60s NULL keepalive packet
-    	str = "0x6e756c6c207061636b657400";
-     } else {
-    	keep_alive_pkt.period_msec = htod32(15000); // 15s
-    
-	    /* temp packet content */
-	    str = "0xFFFFFFFFFFFF00112233445508060001080006040002002376cf51880a090a09FFFFFFFFFFFFFFFFFFFF";
-	    
-	    /* put mac address in */
-	    sprintf( mac_buf, "%02x%02x%02x%02x%02x%02x",
-	    dhd->mac.octet[0], dhd->mac.octet[1], dhd->mac.octet[2],
-	    dhd->mac.octet[3], dhd->mac.octet[4], dhd->mac.octet[5]
-	    );
-	    /* put MAC address in */
-	    memcpy( str+14, mac_buf, ETHER_ADDR_LEN*2);
-	    memcpy( str+46, mac_buf, ETHER_ADDR_LEN*2);
-	    /* put IP address in */
-	    memcpy( str+58, ip_str, 8);
-    
-	    /* put Default gateway in */
-	    memcpy( str+78, gatewaybuf, 8);
-	      
-	    printk("%s:Default gateway:%s\n", __FUNCTION__, str);
-	}
-    
-    keep_alive_pkt.len_bytes = htod16(wl_pattern_atoh(str, (char*)keep_alive_pktp->data));
-    
-    buf_len += (WL_KEEP_ALIVE_FIXED_LEN + keep_alive_pkt.len_bytes);
-    
-    /* Keep-alive attributes are set in local variable (keep_alive_pkt), and
-    * then memcpy'ed into buffer (keep_alive_pktp) since there is no
-    * guarantee that the buffer is properly aligned.
-    */
-    memcpy((char*)keep_alive_pktp, &keep_alive_pkt, WL_KEEP_ALIVE_FIXED_LEN);
-    
-    dhdcdc_set_ioctl(dhd, 0, WLC_SET_VAR, buf, buf_len); 
-    
-    return 0;
-}
-#endif
-
-
 int dhd_set_pktfilter(int add, int id, int offset, char *mask, char *pattern)
 {
 	char 				*str;
@@ -892,15 +784,6 @@ int dhd_set_pktfilter(int add, int id, int offset, char *mask, char *pattern)
 	wl_pkt_filter_enable_t	enable_parm;
 
 	myprintf("Enter set packet filter\n");
-	
-#ifdef BCM4329_LOW_POWER
-	if (add == 1 && pkt_id == 105)
-   {
-       myprintf("MCAST packet filter, hasDLNA is true\n");
-       hasDLNA = true;
-   }
-#endif
-	
 	if (!pdhd)
 		return -1;
 
@@ -945,18 +828,6 @@ int dhd_set_pktfilter(int add, int id, int offset, char *mask, char *pattern)
 	/* Parse pattern filter mask. */
 	mask_size =	htod32(wl_pattern_atoh(mask,
 		(char *) pkt_filterp->u.pattern.mask_and_pattern));
-
-	if((int)mask_size < 0) {
-		myprintf("Mask size is invalid\n");
-		return -EINVAL;	
-	}
-
-#ifdef BCM4329_LOW_POWER
-	if (add == 1 && id == 101){
-		memcpy(ip_str, pattern+78, 8);
-    printk("ip: %s", ip_str);        
-  }
-#endif
 
 	/* Parse pattern filter pattern. */
 	pattern_size = htod32(wl_pattern_atoh(pattern,
@@ -1192,12 +1063,10 @@ dhd_preinit_ioctls(dhd_pub_t *dhd)
 	);
 
 #ifndef CONFIG_MACH_PASSIONC
-#if 0 /*Move packet filter to framework*/
 	/* add a default packet filter pattern */
 	dhd_set_pktfilter(1, ALLOW_UNICAST, 0, "0xffffffffffff", mac_buf);
 	dhd_set_pktfilter(1, ALLOW_DHCP, 0, "0xffffffffffff000000000000ffff00000000000000000000000000000000000000000000ffff", "0xffffffffffff0000000000000800000000000000000000000000000000000000000000000044");
 	dhd_set_pktfilter(1, ALLOW_IPV6_MULTICAST, 0, "0xffff", "0x3333");
-#endif
 #endif
 
 	/* set mode to allow pattern */
@@ -1258,16 +1127,6 @@ dhd_preinit_ioctls(dhd_pub_t *dhd)
 	bcm_mkiovar("ht_wsec_restrict", (char *)&ht_wsec_restrict, 4, iovbuf, sizeof(iovbuf));
 	dhdcdc_set_ioctl(dhd, 0, WLC_SET_VAR, iovbuf, sizeof(iovbuf));
 
-
-	/* set scanresults_minrssi */
-	ret = -88;
-	bcm_mkiovar("scanresults_minrssi", (char *)&ret, 4, iovbuf, sizeof(iovbuf));
-	dhdcdc_set_ioctl(dhd, 0, WLC_SET_VAR, iovbuf, sizeof(iovbuf));
-
-	ret = 5;
-	bcm_mkiovar("assoc_retry_max", (char *)&ret, 4, iovbuf, sizeof(iovbuf));
-	dhdcdc_set_ioctl(dhd, 0, WLC_SET_VAR, iovbuf, sizeof(iovbuf));
-
 	dhd_os_proto_unblock(dhd);
 	return 0;
 }
@@ -1300,8 +1159,6 @@ dhd_prot_stop(dhd_pub_t *dhd)
  */
 static unsigned int dhdhtc_power_ctrl_mask = 0;
 int dhdcdc_power_active_while_plugin = 1;
-int dhdcdc_wifiLock = 0; /* to keep wifi power mode as PM_FAST and bcn_li_dtim as 0 */
-
 
 int dhdhtc_update_wifi_power_mode(int is_screen_off)
 {
@@ -1322,11 +1179,11 @@ int dhdhtc_update_wifi_power_mode(int is_screen_off)
 		pm_type = PM_OFF;
 		dhdcdc_set_ioctl(dhd, 0, WLC_SET_PM, &pm_type, sizeof(pm_type));
 	} else {
-		if (is_screen_off && !dhdcdc_wifiLock)
+		if (is_screen_off)
 			pm_type = PM_MAX;
 		else
 			pm_type = PM_FAST;
-		myprintf("update pm: %s, wifiLock: %d\n", pm_type==1?"PM_MAX":"PM_FAST", dhdcdc_wifiLock);
+		myprintf("update pm: %s\n", pm_type==1?"PM_MAX":"PM_FAST");
 		dhdcdc_set_ioctl(dhd, 0, WLC_SET_PM, &pm_type, sizeof(pm_type));
 	}
 
@@ -1371,7 +1228,7 @@ int dhdhtc_update_dtim_listen_interval(int is_screen_off)
 		return -1;
 	}
 
-	if (wl_iw_is_during_wifi_call() || !is_screen_off || dhdcdc_wifiLock)
+	if (wl_iw_is_during_wifi_call() || !is_screen_off)
 		bcn_li_dtim = 0;
 	else
 		bcn_li_dtim = 3;

@@ -94,7 +94,6 @@ typedef struct wl_iw {
 	int spy_num;
 	uint32 pwsec;
 	uint32 gwsec;
-	bool privacy_invoked; /* pp+, for wps */
 
 	struct ether_addr spy_addr[IW_MAX_SPY];
 	struct iw_quality spy_qual[IW_MAX_SPY];
@@ -239,6 +238,6 @@ extern int wl_iw_parse_ssid_list(char** list_str, wlc_ssid_t* ssid, int idx, int
 
 extern int wl_iw_parse_channel_list(char** list_str, uint16* channel_list, int channel_num);
 
-#endif
+#endif 
 
 #endif

@@ -3800,20 +3800,13 @@ dhdsdio_hostmail(dhd_bus_t *bus)
 	return intstatus;
 }
 
+#define MMC_RECOVER
+
+
 #ifdef MMC_RECOVER
-static uint32 mmc_recover_saved_jiffies = 0;
 static uint8 prev_tx_seq = 0;
 static uint8 prev_tx_max = 0;
 static int max_equal_count = 0;
-static int start_mmc_recover = 0;
-void dhdsdio_set_mmc_recover(int set)
-{
-	myprintf("set mmc recover %d\n", set);
-	if (set)
-		start_mmc_recover = 1;
-	else
-		start_mmc_recover = 0;
-}
 #endif
 
 static int dhdsdio_regfail = 0;
@@ -3976,36 +3969,22 @@ clkwait:
 	}
 
 #ifdef MMC_RECOVER
-	if (start_mmc_recover) {
-		if ((bus->tx_max == bus->tx_seq)&&(bus->tx_max == prev_tx_max)&&(bus->tx_seq == prev_tx_seq)) {
-			/* check point */
-			if (mmc_recover_saved_jiffies == 0)
-				mmc_recover_saved_jiffies = jiffies;
-			else {
-				if (jiffies > (mmc_recover_saved_jiffies + HZ)) {
-					max_equal_count++;
-					mmc_recover_saved_jiffies = jiffies;
-					myprintf("bad count %d\n", max_equal_count);
-				} else if (jiffies < mmc_recover_saved_jiffies){
-					max_equal_count = 0;
-					mmc_recover_saved_jiffies = 0;
-				}
-			}
-		} else {
-			max_equal_count = 0;
-			mmc_recover_saved_jiffies = 0;
-		}
+	if ((bus->tx_max == bus->tx_seq)&&(bus->tx_max == prev_tx_max)&&(bus->tx_seq == prev_tx_seq)) {
+		max_equal_count++;
+		myprintf("bad case, count %d\n", max_equal_count);
+		myprintf("framecnt = %d\n", framecnt);
+	} else {
+		max_equal_count = 0;
+	}
 
-		prev_tx_max = bus->tx_max;
-		prev_tx_seq = bus->tx_seq;
+	prev_tx_max = bus->tx_max;
+	prev_tx_seq = bus->tx_seq;
 
-		if (max_equal_count > 1) {
-			bus->tx_seq = (bus->tx_seq + 1) % SDPCM_SEQUENCE_WRAP;
-			//bus->tx_max = bus->tx_seq + 2;
-			myprintf("reset count %d\n", max_equal_count);
-			max_equal_count = 0;
-			mmc_recover_saved_jiffies = 0;
-		}
+	if (max_equal_count >= 3) {
+		bus->tx_seq = (bus->tx_seq + 1) % SDPCM_SEQUENCE_WRAP;
+		//bus->tx_max = bus->tx_seq + 2;
+		max_equal_count = 0;
+		myprintf("reset count\n");
 	}
 #endif
 
@@ -5118,11 +5097,11 @@ dhdsdio_release_dongle(dhd_bus_t *bus, osl_t *osh)
 		return;
 
 	if (bus->sih) {
-#if !defined(BCMLXSDMMC)
 		dhdsdio_clkctl(bus, CLK_AVAIL, FALSE);
+#if !defined(BCMLXSDMMC)
 		si_watchdog(bus->sih, 4);
-		dhdsdio_clkctl(bus, CLK_NONE, FALSE);
 #endif /* !defined(BCMLXSDMMC) */
+		dhdsdio_clkctl(bus, CLK_NONE, FALSE);
 		si_detach(bus->sih);
 		if (bus->vars && bus->varsz)
 			MFREE(osh, bus->vars, bus->varsz);
@@ -5365,91 +5344,6 @@ dhd_bus_set_nvram_params(struct dhd_bus * bus, const char *nvram_params)
 	bus->nvram_params = nvram_params;
 }
 
-#define WIFI_MAC_PARAM_STR	"macaddr="
-#define WIFI_MAX_MAC_LEN	17 /* XX:XX:XX:XX:XX:XX */
-
-#define NVS_LEN_OFFSET		0x0C
-#define NVS_DATA_OFFSET		0x40
-
-extern unsigned char *get_wifi_nvs_ram(void);
-
-static uint
-get_mac_from_wifi_nvs_ram(char* buf, unsigned int buf_len)
-{
-	unsigned char *nvs_ptr;
-	unsigned char *mac_ptr;
-	uint len = 0;
-
-	if (!buf || !buf_len) {
-		return 0;
-	}
-
-	nvs_ptr = get_wifi_nvs_ram();
-	if (nvs_ptr) {
-		nvs_ptr += NVS_DATA_OFFSET;
-	}
-
-	mac_ptr = strstr(nvs_ptr, WIFI_MAC_PARAM_STR);
-	if (mac_ptr) {
-		mac_ptr += strlen(WIFI_MAC_PARAM_STR);
-
-		/* skip leading space */
-		while (mac_ptr[0] == ' ') {
-			mac_ptr++;
-		}
-
-		/* locate end-of-line */
-		len = 0;
-		while (mac_ptr[len] != '\r' && mac_ptr[len] != '\n' &&
-				mac_ptr[len] != '\0') {
-			len++;
-		}
-
-		if (len > buf_len) {
-			len = buf_len;
-		}
-		memcpy(buf, mac_ptr, len);
-	}
-
-	return len;
-}
-
-/*
- * Modify mac address attribute in buffer
- * return : length of modified buffer
- */
-static uint
-modify_mac_attr(char* buf, unsigned buf_len, char *mac, unsigned int mac_len)
-{
-	unsigned char *mac_ptr;
-	uint len;
-
-	if (!buf || !mac) {
-		return buf_len;
-	}
-
-	mac_ptr = strstr(buf, WIFI_MAC_PARAM_STR);
-	if (mac_ptr) {
-		mac_ptr += strlen(WIFI_MAC_PARAM_STR);
-
-		/* locate end-of-line */
-		len = 0;
-		while (mac_ptr[len] != '\r' && mac_ptr[len] != '\n' &&
-				mac_ptr[len] != '\0') {
-			len++;
-		}
-
-		if (len != mac_len) {
-			/* shift remaining data */
-			memmove(&mac_ptr[mac_len + 1], &mac_ptr[len + 1], buf_len - len);
-			buf_len = buf_len - len + mac_len;
-		}
-		memcpy(mac_ptr, mac, mac_len);
-	}
-
-	return buf_len;
-}
-
 static int
 dhdsdio_download_nvram(struct dhd_bus *bus)
 {
@@ -5460,9 +5354,6 @@ dhdsdio_download_nvram(struct dhd_bus *bus)
 	char *bufp;
 	char *nv_path;
 	bool nvram_file_exists;
-
-	char mac[WIFI_MAX_MAC_LEN];
-	unsigned mac_len;
 
 	nv_path = bus->nv_path;
 
@@ -5486,11 +5377,6 @@ dhdsdio_download_nvram(struct dhd_bus *bus)
 	/* Download variables */
 	if (nvram_file_exists) {
 		len = dhd_os_get_image_block(memblock, MEMBLOCK, image);
-
-		mac_len = get_mac_from_wifi_nvs_ram(mac, WIFI_MAX_MAC_LEN);
-		if (mac_len > 0) {
-			len = modify_mac_attr(memblock, len, mac, mac_len);
-		}
 	}
 	else {
 		len = strlen(bus->nvram_params);
