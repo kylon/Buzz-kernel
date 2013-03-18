@@ -230,7 +230,6 @@ CONFIG_MSM_DEBUG_UART_NONE=y
 #
 # MSM Board Type
 #
-# CONFIG_MACH_BEE is not set
 CONFIG_MACH_BUZZ=y
 # CONFIG_MACH_BUZZC is not set
 # CONFIG_MACH_PARADISE is not set
