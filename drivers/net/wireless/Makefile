@@ -63,8 +63,6 @@ obj-$(CONFIG_WL12XX)	+= wl12xx/
 
 obj-$(CONFIG_IWM)	+= iwmc3200wifi/
 
-ifeq ($(CONFIG_MACH_BEE),y)
-OBJS		+= bcm4329_204/
-else
-obj-$(CONFIG_BCM4329)	+= bcm4329/
-endif
+obj-$(CONFIG_MACH_BEE)	+= bcm4329_204/
+
+obj-$(CONFIG_MACH_BUZZ)    += bcm4329/
