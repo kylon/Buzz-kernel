@@ -1107,16 +1107,7 @@ static void ext4_da_update_reserve_space(struct inode *inode, int used)
 		percpu_counter_sub(&sbi->s_dirtyblocks_counter, mdb_free);
 		EXT4_I(inode)->i_allocated_meta_blocks = 0;
 		EXT4_I(inode)->i_reserved_meta_blocks = mdb;
-	}
-         
-         if (unlikely(EXT4_I(inode)->i_allocated_meta_blocks > EXT4_I(inode)->i_reserved_meta_blocks)) {
-                 ext4_msg(inode->i_sb, KERN_NOTICE, "%s: ino %lu, allocated %d "
-                          "with only %d reserved metadata blocks\n", __func__,
-                          inode->i_ino, EXT4_I(inode)->i_allocated_meta_blocks,
-                          EXT4_I(inode)->i_reserved_meta_blocks);
-                 WARN_ON(1);
-                 EXT4_I(inode)->i_allocated_meta_blocks = EXT4_I(inode)->i_reserved_meta_blocks;
-         } 
+	} 
 
 	/* update per-inode reservations */
 	BUG_ON(used  > EXT4_I(inode)->i_reserved_data_blocks);
