@@ -89,6 +89,11 @@ config CPU_FREQ_DEFAULT_GOV_SAVAGEDZEN
 	select CPU_FREQ_GOV_SAVAGEDZEN
 	help
 	  Use the CPUFreq governor 'savagedzen' as default.
+config CPU_FREQ_DEFAULT_GOV_SMARTASSH3
+        bool "smartassH3"
+        select CPU_FREQ_GOV_SMARTASSH3
+        help
+          Use the CPUFreq governor 'SmartassH3' as default. 
 
 config CPU_FREQ_DEFAULT_GOV_SMOOTHASS
 	bool "smoothass"
@@ -148,6 +153,12 @@ config CPU_FREQ_GOV_PERFORMANCE
 	  module will be called cpufreq_performance.
 
 	  If in doubt, say Y.
+
+config CPU_FREQ_GOV_SMARTASSH3
+          tristate "'SmartassH3' cpufreq governor"
+          depends on CPU_FREQ
+          help
+            'SmartassH3' - a "smartassV2 with tweaks by H3ROS" governor! 
 
 config CPU_FREQ_GOV_POWERSAVE
 	tristate "'powersave' governor"
