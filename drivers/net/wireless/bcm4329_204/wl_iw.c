@@ -57,7 +57,6 @@ typedef const struct si_pub  si_t;
 #define WL_INFORM(x)
 #define WL_WSEC(x)
 #define WL_SCAN(x) //myprintf x
-#define WL_BTCOEX(x)	printk x
 
 #include <wl_iw.h>
 
@@ -90,12 +89,6 @@ typedef const struct si_pub  si_t;
 extern uint dhd_wapi_enabled;
 #endif
 
-#ifdef BCMWAPI_WPI
-#define IW_WSEC_ENABLED(wsec)	((wsec) & (WEP_ENABLED | TKIP_ENABLED | AES_ENABLED | SMS4_ENABLED)) //pp+, for wps
-#else
-#define IW_WSEC_ENABLED(wsec)	((wsec) & (WEP_ENABLED | TKIP_ENABLED | AES_ENABLED)) //pp+, for wps
-#endif
-
 #include <linux/rtnetlink.h>
 #include <linux/mutex.h>
 
@@ -107,26 +100,8 @@ extern uint dhd_wapi_enabled;
 static bool ap_cfg_running = FALSE;
 static bool ap_fw_loaded = FALSE;
 static int ap_mode = 0;
-static struct mac_list_set mac_list_buf;
 #endif
-
-#ifdef SOFTAP_PROTECT
-#define AP_PROTECT_TIME 		5000
-#define AP_MAX_FAIL_COUNT		2
-typedef struct ap_info {
-	struct timer_list timer;
-	uint32 timer_on;
-	long ap_pid;
-	struct semaphore ap_sem;
-	struct completion ap_exited;
-} ap_info_t;
-ap_info_t *g_ap_protect = NULL;
-static void wl_iw_ap_restart(void);
-#endif
-
 static struct net_device *priv_dev;
-static uint32 last_scan_time = 0; /* pp+, record the last_scan_time */
-#define SCAN_TIME_OUT	(25*HZ)
 
 #ifdef WLAN_AUTO_RSSI
 static int old_rssi_level = WL_IW_RSSI_MINVAL;
@@ -150,13 +125,6 @@ extern uint dhd_dev_reset(struct net_device *dev, uint8 flag);
 extern void dhd_dev_init_ioctl(struct net_device *dev);
 extern int wifi_get_cscan_enable(void);
 uint wl_msg_level = WL_ERROR_VAL;
-
-#ifdef BCM4329_LOW_POWER
-char gatewaybuf[8];
-extern bool hasDLNA;
-extern bool allowMulticast;
-extern int dhd_set_keepalive(int value);
-#endif
 
 #define MAX_WLIW_IOCTL_LEN 1024
 
@@ -271,15 +239,12 @@ static int wl_iw_combined_scan_set(struct net_device *dev, wlc_ssid_t* ssids_loc
 typedef enum bt_coex_status {
 	BT_DHCP_IDLE = 0,
 	BT_DHCP_START,
-	BT_DHCP_NORMAL_WINDOW,
 	BT_DHCP_OPPORTUNITY_WINDOW,
 	BT_DHCP_FLAG_FORCE_TIMEOUT
 } coex_status_t;
-
-#define BT_DHCP_NORMAL_WINDOW_TIME	    	26000
-#define BT_DHCP_OPPORTUNITY_WINDOW_TIME		65
-#define BT_DHCP_FLAG_FORCE_TIME			300
-#define BT_DHCP_RETRY_TIME	(5*1000/(BT_DHCP_OPPORTUNITY_WINDOW_TIME+BT_DHCP_FLAG_FORCE_TIME))
+#define BT_DHCP_OPPORTUNITY_WINDOW_TIEM			65
+#define BT_DHCP_FLAG_FORCE_TIME				300
+#define BT_DHCP_RETRY_TIME	(30*1000/(BT_DHCP_OPPORTUNITY_WINDOW_TIEM+BT_DHCP_FLAG_FORCE_TIME))
 
 typedef struct bt_info {
 	struct net_device *dev;
@@ -366,8 +331,6 @@ int wl_get_ap_mode(void)
 #endif
 }
 
-static int wl_iw_send_priv_event(struct net_device *dev, char *flag);
-
 #ifdef WLAN_PROTECT
 static void wl_iw_restart(struct net_device *dev)
 {
@@ -416,8 +379,6 @@ static void wl_iw_restart(struct net_device *dev)
 		iw_link_state = 0;
 	}
 	mutex_unlock(&wl_start_lock);
-        WL_ERROR(("%s: WIFI_RECOVERY \n", __FUNCTION__));
-        wl_iw_send_priv_event(dev, "WIFI_RECOVERY");
 	return;
 }
 #endif
@@ -493,10 +454,6 @@ dev_wlc_ioctl(
 #ifdef WLAN_PROTECT
 void wl_iw_set_busdown(int busdown)
 {
-#ifdef CONFIG_BCM4329_SOFTAP
-	if (ap_mode) /* handle by ap recover */
-		return;
-#endif
 	wl_iw_busdown = busdown;
 }
 #endif
@@ -903,35 +860,6 @@ wl_iw_low_rssi_set(
 #endif
 
 static int
-wl_iw_scan_minrssi(
-	struct net_device *dev,
-	struct iw_request_info *info,
-	union iwreq_data *wrqu,
-	char *extra
-)
-{
-	char *p;
-	int minrssi = 0;
-	int err = 0;
-
-	p = extra + strlen("SCAN_MINRSSI") +1;
-	minrssi = bcm_strtoul(p, NULL, 10);
-	myprintf("%s: %d\n", __func__, minrssi);
-
-	err = dev_wlc_intvar_set(dev, "scanresults_minrssi", minrssi);
-
-	if (err) {
-		WL_ERROR(("set scan_minrssi fail!\n"));
-		p += snprintf(p, MAX_WX_STRING, "FAIL");
-	} else
-		p += snprintf(p, MAX_WX_STRING, "OK");
-	wrqu->data.length = p - extra + 1;
-
-
-	return 0;
-}
-
-static int
 wl_iw_set_country(
 	struct net_device *dev,
 	struct iw_request_info *info,
@@ -944,8 +872,6 @@ wl_iw_set_country(
 	char *p = extra;
 	int country_offset;
 	int country_code_size;
-	channel_info_t ci;
-	int retry = 0;
 
 	WL_TRACE(("%s\n", __FUNCTION__));
 	memset(country_code, 0, sizeof(country_code));
@@ -958,21 +884,6 @@ wl_iw_set_country(
 		strncpy(country_code, extra + country_offset +1,
 			MIN(country_code_size, sizeof(country_code)));
 
-		WL_ERROR(("%s: Try to set country %s\n", __FUNCTION__, country_code));
-get_channel_retry:
-		if ((error = dev_wlc_ioctl(dev, WLC_GET_CHANNEL, &ci, sizeof(ci)))) {
-			WL_ERROR(("%s: get channel fail!\n", __FUNCTION__));
-			goto exit;
-		}
-		ci.scan_channel = dtoh32(ci.scan_channel);
-		if (ci.scan_channel) {
-			retry++;
-			WL_ERROR(("%s: scan in progress, retry %d!\n", __FUNCTION__, retry));
-			if (retry > 3)
-				goto exit;
-			bcm_mdelay(1000);
-			goto get_channel_retry;
-		}
 
 		if ((error = dev_wlc_ioctl(dev, WLC_SET_COUNTRY,
 			&country_code, sizeof(country_code))) >= 0) {
@@ -1032,7 +943,6 @@ static void btcoex_dhcp_timer_stop(struct net_device *dev)
 	char buf_reg66val_defualt[8] = { 66, 00, 00, 00, 0x88, 0x13, 0x00, 0x00 };
 	char buf_reg41val_defualt[8] = { 41, 00, 00, 00, 0x13, 0x00, 0x00, 0x00 };
 	char buf_reg68val_defualt[8] = { 68, 00, 00, 00, 0x14, 0x00, 0x00, 0x00 };
-#ifdef BTCOEX_TIMER_ENABLED
 	char buf_flag7_default[8] =   { 7, 00, 00, 00, 0x0, 0x00, 0x00, 0x00};
 
 	WL_ERROR(("%s disable BT DHCP Timer\n", __FUNCTION__));
@@ -1044,7 +954,6 @@ static void btcoex_dhcp_timer_stop(struct net_device *dev)
 
 	dev_wlc_bufvar_set(dev, "btc_flags", \
 		(char *)&buf_flag7_default[0], sizeof(buf_flag7_default));
-#endif
 
 	dev_wlc_bufvar_set(dev, "btc_params", \
 		(char *)&buf_reg66val_defualt[0], sizeof(buf_reg66val_defualt));
@@ -1058,11 +967,10 @@ static void btcoex_dhcp_timer_stop(struct net_device *dev)
 
 static int btcoex_dhcp_timer_start(struct net_device *dev)
 {
+	static char ioctlbuf[MAX_WLIW_IOCTL_LEN];
 	char buf_reg66va_dhcp_on[8] = { 66, 00, 00, 00, 0x10, 0x27, 0x00, 0x00 };
 	char buf_reg41va_dhcp_on[8] = { 41, 00, 00, 00, 0x33, 0x00, 0x00, 0x00 };
 	char buf_reg68va_dhcp_on[8] = { 68, 00, 00, 00, 0x90, 0x01, 0x00, 0x00 };
-//#ifdef BTCOEX_TIMER_ENABLED
-	static char ioctlbuf[MAX_WLIW_IOCTL_LEN];
 	char buf_reg12va_sco_time[4] = { 12, 0, 0, 0};
 	int sco_lasttime = 0;
 	int ret;
@@ -1090,7 +998,6 @@ static int btcoex_dhcp_timer_start(struct net_device *dev)
 		myprintf("%s: SCO running, skip it.\n", __FUNCTION__);
 		return 1;
 	}
-//#endif
 
 	dev_wlc_bufvar_set(dev, "btc_params", \
 		(char *)&buf_reg66va_dhcp_on[0], sizeof(buf_reg66va_dhcp_on));
@@ -1101,13 +1008,12 @@ static int btcoex_dhcp_timer_start(struct net_device *dev)
 	dev_wlc_bufvar_set(dev, "btc_params", \
 		(char *)&buf_reg68va_dhcp_on[0], sizeof(buf_reg68va_dhcp_on));
 
-#ifdef BTCOEX_TIMER_ENABLED
+
 	g_bt->bt_state = BT_DHCP_START;
 	g_bt->timer_on = 1;
 	mod_timer(&g_bt->timer, g_bt->timer.expires);
 
 	myprintf("%s: enable BT DHCP Timer\n", __FUNCTION__);
-#endif
 
 	return 0;
 }
@@ -1115,8 +1021,6 @@ static int btcoex_dhcp_timer_start(struct net_device *dev)
 
 
 extern int dhdcdc_power_active_while_plugin;
-extern int dhdcdc_wifiLock;
-
 static int
 wl_iw_set_power_mode(
 	struct net_device *dev,
@@ -1187,30 +1091,6 @@ wl_iw_set_power_mode(
 			dhdhtc_set_power_control(1, DHDHTC_POWER_CTRL_USER_CONFIG);
 			dhdhtc_update_wifi_power_mode(screen_off);
 			break;
-		 /* for fota download */
-		case 30:
-			dhdhtc_set_power_control(0, DHDHTC_POWER_CTRL_FOTA_DOWNLOADING);
-			dhdhtc_update_wifi_power_mode(screen_off);
-			break;
-		case 31:
-			dhdhtc_set_power_control(1, DHDHTC_POWER_CTRL_FOTA_DOWNLOADING);
-			dhdhtc_update_wifi_power_mode(screen_off);
-			break;
-
-		case 87: /* For wifilock release*/
-			myprintf("wifilock release\n");
-			dhdcdc_wifiLock = 0;
-			dhdhtc_update_wifi_power_mode(screen_off);
-			dhdhtc_update_dtim_listen_interval(screen_off);
-			break;
-
-		case 88: /* For wifilock lock*/
-			myprintf("wifilock accquire\n");
-			dhdcdc_wifiLock = 1;
-			dhdhtc_update_wifi_power_mode(screen_off);
-			dhdhtc_update_dtim_listen_interval(screen_off);
-			break;
-
 		case 99: /* For debug. power active or not while usb plugin */
 			dhdcdc_power_active_while_plugin = !dhdcdc_power_active_while_plugin;
 			dhdhtc_update_wifi_power_mode(screen_off);
@@ -1271,23 +1151,6 @@ wl_iw_get_power_mode(
 
 	myprintf("getpower: %s\n", extra);
 	return error;
-}
-
-static int
-wl_iw_get_wifilock_mode(
-	struct net_device *dev,
-	struct iw_request_info *info,
-	union iwreq_data *wrqu,
-	char *extra
-)
-{
-	char *p = extra;
-
-	p += snprintf(p, MAX_WX_STRING, "%d", dhdcdc_wifiLock);
-	wrqu->data.length = p - extra + 1;
-
-	myprintf("dhdcdc_wifiLock: %s\n", extra);
-	return 0;
 }
 
 static int wl_iw_wifi_call = 0;
@@ -1909,11 +1772,9 @@ wl_iw_control_wl_on(
 
 #ifdef CONFIG_BCM4329_SOFTAP
 	if (!ap_fw_loaded) {
-		last_scan_time = 0;
 		wl_iw_iscan_set_scan_broadcast_prep(dev, 0);
 	}
 #else
-	last_scan_time = 0;
 	wl_iw_iscan_set_scan_broadcast_prep(dev, 0);
 #endif
 
@@ -2047,7 +1908,7 @@ static int iwpriv_set_ap_config(struct net_device *dev,
 		}
 
 		extra[wrqu->data.length] = 0;
-		/* WL_SOFTAP((" Got str param in iw_point: %s\n", extra)); */
+		WL_SOFTAP((" Got str param in iw_point:\n %s\n", extra));
 
 		memset(ap_cfg, 0, sizeof(struct ap_profile));
 
@@ -2482,7 +2343,7 @@ wl_iw_get_range(
 		return -EINVAL;
 
 	dwrq->length = sizeof(struct iw_range);
-	memset(range, 0, sizeof(*range));
+	memset(range, 0, sizeof(range));
 
 
 	range->min_nwid = range->max_nwid = 0;
@@ -3870,8 +3731,6 @@ wl_iw_iscan_set_scan(
 	int isup;
 
 	WL_TRACE(("%s: SIOCSIWSCAN : ISCAN\n", dev->name));
-	/* pp+, record the scan time */
-	last_scan_time = jiffies;
 
   if(wifi_get_cscan_enable()){
 	WL_ERROR(("%s: Scan from SIOCGIWSCAN not supported (Due to Using CSCAN)\n", __FUNCTION__));
@@ -4102,7 +3961,6 @@ wl_iw_handle_scanresults_ies(char **event_p, char *end,
 				wpa_snprintf_hex(buf + 10, 2+1, &(ie->len), 1);
 				wpa_snprintf_hex(buf + 12, 2*ie->len+1, ie->data, ie->len);
 				event = IWE_STREAM_ADD_POINT(info, event, end, &iwe, buf);
-				kfree(buf);
 #endif
 				break;
 			}
@@ -4244,7 +4102,7 @@ wl_iw_get_scan(
 	WL_TRACE(("%s: buflen_from_user %d: \n", dev->name, buflen_from_user));
 
 	if (!extra) {
-		WL_ERROR(("%s: wl_iw_get_scan return -EINVAL\n", dev->name));
+		WL_TRACE(("%s: wl_iw_get_scan return -EINVAL\n", dev->name));
 		return -EINVAL;
 	}
 
@@ -4253,10 +4111,8 @@ wl_iw_get_scan(
 		return -EINVAL;
 	}
 
-	if ((error = dev_wlc_ioctl(dev, WLC_GET_CHANNEL, &ci, sizeof(ci)))) {
-		WL_ERROR(("%s: get channel fail!\n", __FUNCTION__));
+	if ((error = dev_wlc_ioctl(dev, WLC_GET_CHANNEL, &ci, sizeof(ci))))
 		return error;
-	}
 	ci.scan_channel = dtoh32(ci.scan_channel);
 	if (ci.scan_channel) {
       if(!wifi_get_cscan_enable()){
@@ -4289,7 +4145,7 @@ wl_iw_get_scan(
 
 		list = kmalloc(len, GFP_KERNEL);
 		if (!list) {
-			WL_ERROR(("%s: wl_iw_get_scan return -ENOMEM\n", dev->name));
+			WL_TRACE(("%s: wl_iw_get_scan return -ENOMEM\n", dev->name));
 			g_scan_specified_ssid = 0;
 			return -ENOMEM;
 		}
@@ -4298,11 +4154,10 @@ wl_iw_get_scan(
 	memset(list, 0, len);
 	list->buflen = htod32(len);
 	if ((error = dev_wlc_ioctl(dev, WLC_SCAN_RESULTS, list, len))) {
-		WL_ERROR(("%s: %s : Scan_results ERROR %d\n", dev->name, __FUNCTION__, len));
+		WL_TRACE(("%s: %s : Scan_results ERROR %d\n", dev->name, __FUNCTION__, len));
 		dwrq->length = len;
 		if (g_scan_specified_ssid)
 			kfree(list);
-		wl_iw_fixed_scan(dev);
 		return 0;
 	}
 	list->buflen = dtoh32(list->buflen);
@@ -4505,13 +4360,13 @@ wl_iw_iscan_get_scan(
 
 #if defined(CONFIG_BCM4329_SOFTAP)
 	if (ap_cfg_running) {
-		WL_ERROR(("%s: Not executed, reason -'SOFTAP is active'\n", __FUNCTION__));
+		WL_TRACE(("%s: Not executed, reason -'SOFTAP is active'\n", __FUNCTION__));
 		return -EINVAL;
 	}
 #endif
 
 	if (!extra) {
-		WL_ERROR(("%s: INVALID SIOCGIWSCAN GET bad parameter\n", dev->name));
+		WL_TRACE(("%s: INVALID SIOCGIWSCAN GET bad parameter\n", dev->name));
 		return -EINVAL;
 	}
 
@@ -4526,15 +4381,6 @@ wl_iw_iscan_get_scan(
 		return -EAGAIN;
 	}
   }
-
-	/* pp+, check last scan time here */
-	if (last_scan_time && (jiffies > last_scan_time) && ((jiffies - last_scan_time) > SCAN_TIME_OUT)) {
-		WL_ERROR(("%s: scan time out, last %d, now %lu!\n",__FUNCTION__, last_scan_time, jiffies));
-		wl_iw_fixed_scan(dev);
-		last_scan_time = 0;
-		return -EINVAL;
-	}
-
 	if ((!iscan) || (iscan->sysioc_pid < 0)) {
 		WL_TRACE(("%ssysioc_pid\n", __FUNCTION__));
 		return wl_iw_get_scan(dev, info, dwrq, extra);
@@ -4584,10 +4430,9 @@ wl_iw_iscan_get_scan(
 
 
 		if (event + ETHER_ADDR_LEN + bi->SSID_len + IW_EV_UINT_LEN + IW_EV_FREQ_LEN +
-			IW_EV_QUAL_LEN >= end) {
-			WL_ERROR(("%s: buffer to big!\n", __FUNCTION__));
+			IW_EV_QUAL_LEN >= end)
 			return -E2BIG;
-		}
+
 		iwe.cmd = SIOCGIWAP;
 		iwe.u.ap_addr.sa_family = ARPHRD_ETHER;
 		memcpy(iwe.u.ap_addr.sa_data, &bi->BSSID, ETHER_ADDR_LEN);
@@ -4654,10 +4499,8 @@ wl_iw_iscan_get_scan(
 
 
 		if (bi->rateset.count) {
-			if (event + IW_MAX_BITRATES*IW_EV_PARAM_LEN >= end) {
-				WL_ERROR(("%s: buffer to big!\n", __FUNCTION__));
+			if (event + IW_MAX_BITRATES*IW_EV_PARAM_LEN >= end)
 				return -E2BIG;
-			}
 
 			value = event + IW_EV_LCP_LEN;
 			iwe.cmd = SIOCGIWRATE;
@@ -4686,10 +4529,9 @@ wl_iw_iscan_get_scan(
   }
 	myprintf("[WLAN] %s return to WE %d bytes APs=%d\n", __func__, dwrq->length, counter);
 
-	if (!dwrq->length) {
-		WL_ERROR(("%s: EAGAIN!\n", __FUNCTION__));
+	if (!dwrq->length)
 		return -EAGAIN;
-	}
+
 	return 0;
 }
 #endif
@@ -5308,7 +5150,7 @@ wl_iw_set_power(
 
 	WL_TRACE(("%s: SIOCSIWPOWER\n", dev->name));
 
-	pm = vwrq->disabled ? PM_OFF : PM_FAST;
+	pm = vwrq->disabled ? PM_OFF : PM_MAX;
 
 	pm = htod32(pm);
 	if ((error = dev_wlc_ioctl(dev, WLC_SET_PM, &pm, sizeof(pm))))
@@ -5712,21 +5554,6 @@ wl_iw_set_wpaauth(
 			val |= iw->pwsec;
 		}
 
-		/* pp++, add for wps */
-		if (iw->privacy_invoked && !val) {
-			WL_WSEC(("%s: %s: 'Privacy invoked' TRUE but clearing wsec, assuming "
-			         "we're a WPS enrollee\n", dev->name, __FUNCTION__));
-			if ((error = dev_wlc_intvar_set(dev, "is_WPS_enrollee", TRUE))) {
-				WL_WSEC(("Failed to set iovar is_WPS_enrollee\n"));
-				return error;
-			}
-		} else if (val) {
-			if ((error = dev_wlc_intvar_set(dev, "is_WPS_enrollee", FALSE))) {
-				WL_WSEC(("Failed to clear iovar is_WPS_enrollee\n"));
-				return error;
-			}
-		}
-
 		if ((error = dev_wlc_intvar_set(dev, "wsec", val)))
 			return error;
 
@@ -5812,7 +5639,6 @@ wl_iw_set_wpaauth(
 
 		break;
 	case IW_AUTH_PRIVACY_INVOKED:
-#if 0 /* pp+, modify for wps */
 		WL_INFORM(("%s: IW_AUTH_PRIVACY_INVOKED\n", __FUNCTION__));
 		/* if paramval is zero, allow association to AP with encryption while
 		 * wsec is not set in the driver. If set to 1, restore default wsec_restrict value
@@ -5825,35 +5651,6 @@ wl_iw_set_wpaauth(
 				paramval));
 			return error;
 		}
-#else
-		if (paramval == 0) {
-			iw->privacy_invoked = FALSE;
-			if ((error = dev_wlc_intvar_set(dev, "is_WPS_enrollee", FALSE))) {
-				WL_WSEC(("Failed to clear iovar is_WPS_enrollee\n"));
-				return error;
-			}
-		} else {
-			int wsec;
-
-			iw->privacy_invoked = TRUE;
-			if ((error = dev_wlc_intvar_get(dev, "wsec", &wsec)))
-				return error;
-
-			if (!(IW_WSEC_ENABLED(wsec))) {
-
-
-				if ((error = dev_wlc_intvar_set(dev, "is_WPS_enrollee", TRUE))) {
-					WL_WSEC(("Failed to set iovar is_WPS_enrollee\n"));
-					return error;
-				}
-			} else {
-				if ((error = dev_wlc_intvar_set(dev, "is_WPS_enrollee", FALSE))) {
-					WL_WSEC(("Failed to clear iovar is_WPS_enrollee\n"));
-					return error;
-				}
-			}
-		}
-#endif /* pp+, modify for wps */
 		break;
 #endif
 #ifdef BCMWAPI_WPI
@@ -6553,22 +6350,6 @@ exit_proc:
 	return res;
 }
 
-
-static int
-wl_iw_get_cscan(
-	struct net_device *dev,
-	struct iw_request_info *info,
-	union iwreq_data *wrqu,
-	char *extra
-)
-{
-	char *p = extra;
-
-	p += snprintf(p, MAX_WX_STRING, "%d\n", wifi_get_cscan_enable()? 1: 0);
-	wrqu->data.length = p - extra + 1;
-
-	return 0;
-}
 #endif
 
 
@@ -6643,10 +6424,8 @@ static int set_ap_cfg(struct net_device *dev, struct ap_profile *ap)
 	WL_SOFTAP(("wl_iw: set ap profile:\n"));
 	WL_SOFTAP(("	ssid = '%s'\n", ap->ssid));
 	WL_SOFTAP(("	security = '%s'\n", ap->sec));
-#if 0
 	if (ap->key[0] != '\0')
 		WL_SOFTAP(("	key = '%s'\n", ap->key));
-#endif
 	WL_SOFTAP(("	channel = %d\n", ap->channel));
 	WL_SOFTAP(("	max scb = %d\n", ap->max_scb));
 
@@ -6738,7 +6517,7 @@ get_channel_retry:
 			else {
 				WL_ERROR(("can't get auto channel sel, err = %d, \
 					chosen = %d\n", ret, chosen));
-				chosen = 6; /*Alan: Set default channel when get auto channel failed*/
+				return -1;
 			}
 		}
 		if ((chosen == 1) && (!rescan++)) {
@@ -6858,10 +6637,8 @@ static int set_ap_cfg_2(struct net_device *dev, struct ap_profile *ap)
 	WL_SOFTAP(("wl_iw: set ap profile:\n"));
 	WL_SOFTAP(("	ssid = '%s'\n", ap->ssid));
 	WL_SOFTAP(("	security = '%s'\n", ap->sec));
-#if 0
 	if (ap->key[0] != '\0')
 		WL_SOFTAP(("	key = '%s'\n", ap->key));
-#endif
 	WL_SOFTAP(("	channel = %d\n", ap->channel));
 	WL_SOFTAP(("	max scb = %d\n", ap->max_scb));
 
@@ -6993,10 +6770,8 @@ static int wl_iw_set_ap_security(struct net_device *dev, struct ap_profile *ap)
 	WL_SOFTAP(("wl_iw: set ap profile:\n"));
 	WL_SOFTAP(("	ssid = '%s'\n", ap->ssid));
 	WL_SOFTAP(("	security = '%s'\n", ap->sec));
-#if 0
 	if (ap->key[0] != '\0')
 		WL_SOFTAP(("	key = '%s'\n", ap->key));
-#endif
 	WL_SOFTAP(("	channel = %d\n", ap->channel));
 	WL_SOFTAP(("	max scb = %d\n", ap->max_scb));
 
@@ -7265,12 +7040,6 @@ static int iwpriv_softap_stop(struct net_device *dev,
 	res = wl_iw_softap_deassoc_stations(dev);
 	ap_mode = 0;
 	wl_iw_send_priv_event(priv_dev, "AP_DOWN");
-#ifdef SOFTAP_PROTECT
-	if (g_ap_protect&&g_ap_protect->timer_on) {
-		g_ap_protect->timer_on = 0;
-		del_timer_sync(&g_ap_protect->timer);
-	}
-#endif
 #else
 	res = wl_iw_softap_deassoc_stations(ap_net_dev);
 
@@ -7521,11 +7290,6 @@ set_ap_mac_list(struct net_device *dev, char *buf)
 		WL_SOFTAP(("invalid count white: %d black: %d\n", white_maclist->count, black_maclist->count));
 		return 0;
 	}
-	if (buf != (char *)&mac_list_buf) {
-		WL_SOFTAP(("Backup the mac list\n"));
-		memcpy((char *)&mac_list_buf, buf, sizeof(struct mac_list_set));
-	} else
-		WL_SOFTAP(("recover, don't back up mac list\n"));
 
 	ap_macmode = mac_mode;
 	if (mac_mode == MACLIST_MODE_DISABLED) {
@@ -7731,10 +7495,8 @@ static int wl_iw_set_priv(
 		else if (strnicmp(extra, "STOP", strlen("STOP")) == 0)
 			ret = wl_iw_control_wl_off(dev, info);
 #if defined(CSCAN)
-		else if (strnicmp(extra, CSCAN_COMMAND, strlen(CSCAN_COMMAND)) == 0)
-			ret = wl_iw_set_cscan(dev, info, (union iwreq_data *)dwrq, extra);
-		else if (strnicmp(extra, "GETCSCAN", strlen("GETCSCAN")) == 0)
-			ret = wl_iw_get_cscan(dev, info, (union iwreq_data *)dwrq, extra);
+	  else if (strnicmp(extra, CSCAN_COMMAND, strlen(CSCAN_COMMAND)) == 0)
+	  	ret = wl_iw_set_cscan(dev, info, (union iwreq_data *)dwrq, extra);
 #endif
 #ifdef CUSTOMER_HW2
 		else if (strnicmp(extra, "POWERMODE", strlen("POWERMODE")) == 0)
@@ -7749,8 +7511,6 @@ static int wl_iw_set_priv(
 		*/
 		else if (strnicmp(extra, "GETPOWER", strlen("GETPOWER")) == 0)
 			ret = wl_iw_get_power_mode(dev, info, (union iwreq_data *)dwrq, extra);
-		else if (strnicmp(extra, "GETWIFILOCK", strlen("GETWIFILOCK")) == 0)
-			ret = wl_iw_get_wifilock_mode(dev, info, (union iwreq_data *)dwrq, extra);
 		else if (strnicmp(extra, "WIFICALL", strlen("WIFICALL")) == 0)
 			ret = wl_iw_set_wifi_call(dev, info, (union iwreq_data *)dwrq, extra);
 #else
@@ -7792,48 +7552,10 @@ static int wl_iw_set_priv(
 		 */
 		else if (strnicmp(extra, "RXFILTER-ADD", strlen("RXFILTER-ADD")) == 0 ||
 			strnicmp(extra, "RXFILTER-REMOVE", strlen("RXFILTER-REMOVE")) == 0) {
-				
-#ifdef BCM4329_LOW_POWER	
-			struct dd_pkt_filter_s *data = (struct dd_pkt_filter_s *)&extra[32];
-			 if ((data->id == ALLOW_IPV6_MULTICAST) || (data->id == ALLOW_IPV4_MULTICAST))
-			 {
-			     
-			     if (strnicmp(extra, "RXFILTER-ADD", strlen("RXFILTER-ADD")) == 0)
-			     {
-			         WL_ERROR(("RXFILTER-ADD MULTICAST filter\n"));
-			         allowMulticast = false;
-			     }
-			     else
-			     {
-			          WL_ERROR(("RXFILTER-REMOVE MULTICAST filter\n"));
-			          allowMulticast = true;
-			     }
-			 }
-			 else
-#endif
-				wl_iw_set_pktfilter(dev, (struct dd_pkt_filter_s *)&extra[32]);
-		}
-#ifdef BCM4329_LOW_POWER		
-		else if (strnicmp(extra, "GATEWAY-ADD", strlen("GATEWAY-ADD")) == 0) {			
-			int i;
-			WL_ERROR(("Driver GET GATEWAY-ADD CMD!!!"));
-			sscanf(extra+12,"%d",&i);						
-			sprintf( gatewaybuf, "%02x%02x%02x%02x",
-			i & 0xff, ((i >> 8) & 0xff), ((i >> 16) & 0xff), ((i >> 24) & 0xff)
-			);
 
-			if (strcmp(gatewaybuf, "00000000") == 0)
-				sprintf( gatewaybuf, "FFFFFFFF");
+			wl_iw_set_pktfilter(dev, (struct dd_pkt_filter_s *)&extra[32]);
+		}
 
-			WL_ERROR(("gatewaybuf: %s",gatewaybuf));
-			
-			if (screen_off && !hasDLNA && !allowMulticast)
-				dhd_set_keepalive(1);		
-		}
-#endif
-		else if (strnicmp(extra, "SCAN_MINRSSI", strlen("SCAN_MINRSSI")) == 0) {
-			wl_iw_scan_minrssi(dev, info, (union iwreq_data *)dwrq, extra);
-		}
 	    else {
 			snprintf(extra, MAX_WX_STRING, "OK");
 			dwrq->length = strlen("OK") + 1;
@@ -8442,12 +8164,6 @@ wl_iw_event(struct net_device *dev, wl_event_msg_t *e, void* data)
 #endif
 				WL_SOFTAP(("AP DOWN %d\n", event_type));
 				wl_iw_send_priv_event(priv_dev, "AP_DOWN");
-#ifdef SOFTAP_PROTECT
-				if (g_ap_protect&&g_ap_protect->timer_on) {
-					g_ap_protect->timer_on = 0;
-					del_timer_sync(&g_ap_protect->timer);
-				}
-#endif
 			} else {
 				WL_TRACE(("STA_Link Down\n"));
 				if (g_ss_cache_ctrl.last_rssi == 0)
@@ -8478,13 +8194,6 @@ wl_iw_event(struct net_device *dev, wl_event_msg_t *e, void* data)
 #endif
 				WL_SOFTAP(("AP UP %d\n", event_type));
 				wl_iw_send_priv_event(priv_dev, "AP_UP");
-#ifdef SOFTAP_PROTECT
-				if (g_ap_protect->timer_on == 0) {
-					g_ap_protect->timer_on = 1;
-					mod_timer(&g_ap_protect->timer, jiffies + AP_PROTECT_TIME*HZ/1000);
-					WL_SOFTAP(("%s Start AP Timer\n", __FUNCTION__));
-				}
-#endif
 			} else
 #endif
 			{
@@ -8792,23 +8501,15 @@ _bt_dhcp_sysioc_thread(void *data)
 
 		switch (g_bt->bt_state) {
 			case BT_DHCP_START:
-				WL_BTCOEX(("%s, BT_DHCP_START, set normal window = %d\n", __FUNCTION__, BT_DHCP_NORMAL_WINDOW_TIME));
-				g_bt->bt_state = BT_DHCP_NORMAL_WINDOW;
-				mod_timer(&g_bt->timer, jiffies + BT_DHCP_NORMAL_WINDOW_TIME*HZ/1000);
-				g_bt->timer_on = 1;
-				break;
-
-			case BT_DHCP_NORMAL_WINDOW:
-				WL_BTCOEX(("%s, BT_DHCP_NORMAL_WINDOW, set opportunity window = %d\n", __FUNCTION__, BT_DHCP_OPPORTUNITY_WINDOW_TIME));
 				retry_time = 0;
 				g_bt->bt_state = BT_DHCP_OPPORTUNITY_WINDOW;
-				mod_timer(&g_bt->timer, jiffies + BT_DHCP_OPPORTUNITY_WINDOW_TIME*HZ/1000);
+				mod_timer(&g_bt->timer, jiffies + BT_DHCP_OPPORTUNITY_WINDOW_TIEM*HZ/1000);
 				g_bt->timer_on = 1;
 				break;
 
 			case BT_DHCP_OPPORTUNITY_WINDOW:
-				WL_BTCOEX(("%s waiting for %d msec expired, force bt flag\n", \
-						__FUNCTION__, BT_DHCP_OPPORTUNITY_WINDOW_TIME));
+				WL_TRACE(("%s waiting for %d msec expired, force bt flag\n", \
+						__FUNCTION__, BT_DHCP_OPPORTUNITY_WINDOW_TIEM));
 				if (g_bt->dev) wl_iw_bt_flag_set(g_bt->dev, TRUE);
 				g_bt->bt_state = BT_DHCP_FLAG_FORCE_TIMEOUT;
 				mod_timer(&g_bt->timer, jiffies + BT_DHCP_FLAG_FORCE_TIME*HZ/1000);
@@ -8816,13 +8517,13 @@ _bt_dhcp_sysioc_thread(void *data)
 				break;
 
 			case BT_DHCP_FLAG_FORCE_TIMEOUT:
-				WL_BTCOEX(("%s waiting for %d msec expired remove bt flag\n", \
+				WL_TRACE(("%s waiting for %d msec expired remove bt flag\n", \
 						__FUNCTION__, BT_DHCP_FLAG_FORCE_TIME));
 
 				if (g_bt->dev)  wl_iw_bt_flag_set(g_bt->dev, FALSE);
 				if (retry_time++ < BT_DHCP_RETRY_TIME) {
 					g_bt->bt_state = BT_DHCP_OPPORTUNITY_WINDOW;
-					mod_timer(&g_bt->timer, jiffies + BT_DHCP_OPPORTUNITY_WINDOW_TIME*HZ/1000);
+					mod_timer(&g_bt->timer, jiffies + BT_DHCP_OPPORTUNITY_WINDOW_TIEM*HZ/1000);
 					g_bt->timer_on = 1;
 				} else {
 					WL_ERROR(("dhcp retry %d times, give up !!\n", BT_DHCP_RETRY_TIME));
@@ -8900,169 +8601,6 @@ wl_iw_bt_init(struct net_device *dev)
 	return 0;
 }
 
-#ifdef SOFTAP_PROTECT
-static void
-wl_iw_ap_timerfunc(ulong data)
-{
-	ap_info_t  *ap_local = (ap_info_t *)data;
-	ap_local->timer_on = 0;
-	WL_TRACE(("%s\n", __FUNCTION__));
-
-	up(&ap_local->ap_sem);
-}
-
-static int ap_fail_count = 0;
-static int
-_ap_protect_sysioc_thread(void *data)
-{
-#if 0
-	int isup;
-#else
-	char iovbuf[WL_EVENTING_MASK_LEN + 12]; /* Room for "event_msgs" + '\0' + bitvec */
-	static unsigned int txphyerr = 0;
-	unsigned int curr_txphyerr = 0;
-#endif
-	int ret = 0;
-	DAEMONIZE("ap_sysioc");
-
-	while (down_interruptible(&g_ap_protect->ap_sem) == 0) {
-
-		net_os_wake_lock(priv_dev);
-
-		if (g_ap_protect->timer_on) {
-			g_ap_protect->timer_on = 0;
-			del_timer_sync(&g_ap_protect->timer);
-		}
-
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27))
-	rtnl_lock();
-#endif
-#if 0
-		if ((ret = dev_wlc_ioctl(priv_dev, WLC_GET_UP, &isup, sizeof(isup))) != 0)
-				ap_fail_count++;
-		else
-				ap_fail_count = 0;
-#else
-		strcpy(iovbuf, "txphyerr");
-		if ((ret = dev_wlc_ioctl(priv_dev, WLC_GET_VAR, iovbuf, sizeof(iovbuf))) < 0)
-			ap_fail_count++;
-		else {
-			curr_txphyerr = *(unsigned int*)iovbuf;
-			//myprintf("%s: curr_txphyerr(%d)/txphyerr(%d)\n", __FUNCTION__, curr_txphyerr, txphyerr);
-			if ( (curr_txphyerr - txphyerr) > 5000  ) {
-				myprintf("%s: curr_txphyerr(%d) is over txphyerr (%d). fail count + 1\n", __FUNCTION__, curr_txphyerr, txphyerr);
-				ap_fail_count++;
-			} else {
-				ap_fail_count = 0;
-			}
-			txphyerr = curr_txphyerr;
-		}
-#endif
-
-		if (ap_fail_count == AP_MAX_FAIL_COUNT) {
-			wl_iw_restart(priv_dev);
-			wl_iw_ap_restart();
-			txphyerr = 0;
-		}
-
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27))
-	rtnl_unlock();
-#endif
-		mod_timer(&g_ap_protect->timer, jiffies + AP_PROTECT_TIME*HZ/1000);
-		g_ap_protect->timer_on = 1;
-
-		net_os_wake_unlock(priv_dev);
-	}
-
-	if (g_ap_protect->timer_on) {
-		g_ap_protect->timer_on = 0;
-		del_timer_sync(&g_ap_protect->timer);
-	}
-
-	complete_and_exit(&g_ap_protect->ap_exited, 0);
-}
-
-static int
-wl_iw_ap_init(void)
-{
-	ap_info_t *ap_protect = NULL;
-
-	ap_protect = kmalloc(sizeof(ap_info_t), GFP_KERNEL);
-	if (!ap_protect)
-		return -ENOMEM;
-
-	memset(ap_protect, 0, sizeof(ap_info_t));
-	ap_protect->ap_pid = -1;
-	g_ap_protect = ap_protect;
-
-
-	init_timer(&ap_protect->timer);
-	ap_protect->timer.data = (ulong)ap_protect;
-	ap_protect->timer.function = wl_iw_ap_timerfunc;
-	ap_protect->timer_on = 0;
-
-	sema_init(&ap_protect->ap_sem, 0);
-	init_completion(&ap_protect->ap_exited);
-	ap_protect->ap_pid = kernel_thread(_ap_protect_sysioc_thread, ap_protect, 0);
-	if (ap_protect->ap_pid < 0) {
-		WL_ERROR(("Failed in %s\n", __FUNCTION__));
-		return -ENOMEM;
-	}
-
-	return 0;
-}
-
-
-static void
-wl_iw_ap_release(void)
-{
-	ap_info_t *ap_local = g_ap_protect;
-
-	if (!ap_local) {
-		return;
-	}
-
-	if (ap_local->ap_pid >= 0) {
-		KILL_PROC(ap_local->ap_pid, SIGTERM);
-		wait_for_completion(&ap_local->ap_exited);
-	}
-	kfree(ap_local);
-	g_ap_protect = NULL;
-}
-
-
-static void wl_iw_ap_restart(void)
-{
-	WL_SOFTAP(("Enter %s...\n",	__FUNCTION__));
-
-	ap_mode = 0;
-	ap_cfg_running = FALSE;
-	ap_net_dev = NULL;
-
-	set_ap_cfg(priv_dev, &my_ap);
-
-	WL_SOFTAP(("SOFTAP - ENABLE BSS \n"));
-
-#ifndef AP_ONLY
-		if (ap_net_dev == NULL) {
-			printk("ERROR: SOFTAP net_dev* is NULL !!!\n");
-		} else {
-			iwpriv_en_ap_bss(ap_net_dev, NULL, NULL, NULL);
-		}
-#endif
-
-	if (ap_macmode) {
-		WL_SOFTAP(("start restore mac filter!\n"));
-#ifndef AP_ONLY
-		set_ap_mac_list(ap_net_dev, (char *)&mac_list_buf);
-#else
-		set_ap_mac_list(priv_dev, (char *)&mac_list_buf);
-#endif
-	}
-}
-
-#endif
-
 int wl_iw_attach(struct net_device *dev, void * dhdp)
 {
 	int params_size;
@@ -9132,9 +8670,7 @@ int wl_iw_attach(struct net_device *dev, void * dhdp)
   }
 
 	wl_iw_bt_init(dev);
-#ifdef SOFTAP_PROTECT
-	wl_iw_ap_init();
-#endif
+
 	// perf_lock_init(&wl_wificall_perf_lock, PERF_LOCK_HIGHEST, "wifi-call");
 	mutex_init(&wl_wificall_mutex);
 
@@ -9176,9 +8712,6 @@ void wl_iw_detach(void)
 	wl_iw_release_ss_cache_ctrl();
   }
 	wl_iw_bt_release();
-#ifdef SOFTAP_PROTECT
-	wl_iw_ap_release();
-#endif
 #ifdef CONFIG_BCM4329_SOFTAP
 	if (ap_mode) {
 		WL_TRACE(("\n%s AP is going down\n", __FUNCTION__));

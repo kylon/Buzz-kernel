@@ -825,13 +825,11 @@ dhd_op_if(dhd_if_t *ifp)
 			free_netdev(ifp->net);
 		}
 		dhd->iflist[ifp->idx] = NULL;
-		
+		MFREE(dhd->pub.osh, ifp, sizeof(*ifp));
 #ifdef CONFIG_BCM4329_SOFTAP
 		if (ifp->net == ap_net_dev)
 			ap_net_dev = NULL;     /* NULL SOFTAP global as well */
 #endif /*  CONFIG_BCM4329_SOFTAP */
-		
-		MFREE(dhd->pub.osh, ifp, sizeof(*ifp));
 	}
 }
 

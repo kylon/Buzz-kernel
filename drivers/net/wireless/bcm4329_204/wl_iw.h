@@ -47,14 +47,14 @@
 #define BAND_SET_CMD				"BANDSET"
 
 #define	WL_IW_RSSI_MINVAL	-200
-#define	WL_IW_RSSI_NO_SIGNAL	-99
-#define	WL_IW_RSSI_VERY_LOW	-88
-#define	WL_IW_RSSI_LOW		-78
-#define	WL_IW_RSSI_GOOD		-76
-#define	WL_IW_RSSI_VERY_GOOD	-66
-#define	WL_IW_RSSI_EXCELLENT	-65
+#define	WL_IW_RSSI_NO_SIGNAL	-91
+#define	WL_IW_RSSI_VERY_LOW	-80
+#define	WL_IW_RSSI_LOW		-70
+#define	WL_IW_RSSI_GOOD		-68
+#define	WL_IW_RSSI_VERY_GOOD	-58
+#define	WL_IW_RSSI_EXCELLENT	-57
 #define	WL_IW_RSSI_INVALID	 0
-#define MAX_WX_STRING		88
+#define MAX_WX_STRING		80
 #define isprint(c)		bcm_isprint(c)
 #define WL_IW_SET_ACTIVE_SCAN	(SIOCIWFIRSTPRIV+1)
 #define WL_IW_GET_RSSI		(SIOCIWFIRSTPRIV+3)
@@ -94,7 +94,6 @@ typedef struct wl_iw {
 	int spy_num;
 	uint32 pwsec;
 	uint32 gwsec;
-	bool privacy_invoked; /* pp+, for wps */
 
 	struct ether_addr spy_addr[IW_MAX_SPY];
 	struct iw_quality spy_qual[IW_MAX_SPY];
@@ -239,6 +238,6 @@ extern int wl_iw_parse_ssid_list(char** list_str, wlc_ssid_t* ssid, int idx, int
 
 extern int wl_iw_parse_channel_list(char** list_str, uint16* channel_list, int channel_num);
 
-#endif
+#endif 
 
 #endif
