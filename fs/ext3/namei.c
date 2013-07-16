@@ -1426,19 +1426,18 @@ static int make_indexed_dir(handle_t *handle, struct dentry *dentry,
 	frame->bh = bh;
 	bh = bh2;
 	/*
-         * Mark buffers dirty here so that if do_split() fails we write a
-         * consistent set of buffers to disk.
-         */
-        ext3_journal_dirty_metadata(handle, frame->bh);
-        ext3_journal_dirty_metadata(handle, bh);
+	 * Mark buffers dirty here so that if do_split() fails we write a
+	 * consistent set of buffers to disk.
+	 */
+	ext3_journal_dirty_metadata(handle, frame->bh);
+	ext3_journal_dirty_metadata(handle, bh);
 	de = do_split(handle,dir, &bh, frame, &hinfo, &retval);
 	if (!de) {
-                ext3_mark_inode_dirty(handle, dir);
-                dx_release(frames);
-                return retval;
-        }
-        dx_release(frames);
+		ext3_mark_inode_dirty(handle, dir);
+		dx_release(frames);
 		return retval;
+	}
+	dx_release(frames);
 
 	return add_dirent_to_buf(handle, dentry, inode, de, bh);
 }

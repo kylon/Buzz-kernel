@@ -132,11 +132,6 @@
 	mrs	\oldcpsr, cpsr
 	disable_irq
 	.endm
-	
-	.macro  save_and_disable_irqs_notrace, oldcpsr
-        mrs     \oldcpsr, cpsr
-        disable_irq_notrace
-        .endm
 
 /*
  * Restore interrupt state previously stored in a register.  We don't
@@ -220,7 +215,7 @@
 	@ Slightly optimised to avoid incrementing the pointer twice
 	usraccoff \instr, \reg, \ptr, \inc, 0, \cond, \abort
 	.if	\rept == 2
-	usraccoff \instr, \reg, \ptr, \inc, \inc, \cond, \abort
+	usraccoff \instr, \reg, \ptr, \inc, \inc, \cond, \abort 
 	.endif
 
 	add\cond \ptr, #\rept * \inc

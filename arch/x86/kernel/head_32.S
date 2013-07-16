@@ -605,7 +605,7 @@ ignore_int:
 ENTRY(initial_code)
 	.long i386_start_kernel
 ENTRY(initial_page_table)
-        .long pa(swapper_pg_dir)
+	.long pa(swapper_pg_dir)
 
 /*
  * BSS section
@@ -623,7 +623,7 @@ swapper_pg_fixmap:
 	.fill 1024,4,0
 #ifdef CONFIG_X86_TRAMPOLINE
 ENTRY(trampoline_pg_dir)
-        .fill 1024,4,0
+	.fill 1024,4,0
 #endif
 ENTRY(empty_zero_page)
 	.fill 4096,1,0

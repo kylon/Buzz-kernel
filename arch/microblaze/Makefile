@@ -77,7 +77,7 @@ archclean:
 	$(Q)$(MAKE) $(clean)=$(boot)
 
 $(BOOT_TARGETS1): vmlinux
-        $(Q)$(MAKE) $(build)=$(boot) $(boot)/$@
+	$(Q)$(MAKE) $(build)=$(boot) $(boot)/$@
 $(BOOT_TARGETS2): vmlinux
 	$(Q)$(MAKE) $(build)=$(boot) $(boot)/$@
 

@@ -173,8 +173,8 @@ restart:
 				printk(KERN_ERR "olpc-ec:  timeout waiting for"
 						" EC to provide data!\n");
 				if (restarts++ < 10)
-                                        goto restart;
-                                goto err;
+					goto restart;
+				goto err;
 			}
 			outbuf[i] = inb(0x68);
 			printk(KERN_DEBUG "olpc-ec:  received 0x%x\n",

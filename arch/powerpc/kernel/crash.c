@@ -166,23 +166,23 @@ static void crash_kexec_prepare_cpus(int cpu)
 #ifdef CONFIG_PPC_STD_MMU_64
 static void crash_kexec_wait_realmode(int cpu)
 {
-        unsigned int msecs;
-        int i;
- 
-        msecs = 10000;
-        for (i=0; i < NR_CPUS && msecs > 0; i++) {
-                if (i == cpu)
-                        continue;
- 
-                while (paca[i].kexec_state < KEXEC_STATE_REAL_MODE) {
-                        barrier();
-                        if (!cpu_possible(i) || !cpu_online(i) || (msecs <= 0))
-                                break;
-                        msecs--;
-                        mdelay(1);
-                }
-        }
-        mb();
+	unsigned int msecs;
+	int i;
+
+	msecs = 10000;
+	for (i=0; i < NR_CPUS && msecs > 0; i++) {
+		if (i == cpu)
+			continue;
+
+		while (paca[i].kexec_state < KEXEC_STATE_REAL_MODE) {
+			barrier();
+			if (!cpu_possible(i) || !cpu_online(i) || (msecs <= 0))
+				break;
+			msecs--;
+			mdelay(1);
+		}
+	}
+	mb();
 }
 #endif
 
@@ -376,7 +376,7 @@ static int crash_shutdown_cpu = -1;
 static int handle_fault(struct pt_regs *regs)
 {
 	if (crash_shutdown_cpu == smp_processor_id())
-                longjmp(crash_shutdown_buf, 1);
+		longjmp(crash_shutdown_buf, 1);
 	return 0;
 }
 
@@ -400,9 +400,9 @@ void default_machine_crash_shutdown(struct pt_regs *regs)
 
 	for_each_irq(i) {
 		struct irq_desc *desc = irq_desc + i;
-		
+
 		if (!desc || !desc->chip || !desc->chip->eoi)
-                        continue;
+			continue;
 
 		if (desc->status & IRQ_INPROGRESS)
 			desc->chip->eoi(i);

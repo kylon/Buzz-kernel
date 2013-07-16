@@ -987,10 +987,9 @@ static void xen_pgd_pin(struct mm_struct *mm)
  */
 void xen_mm_pin_all(void)
 {
-	unsigned long flags;
 	struct page *page;
 
-	spin_lock_irqsave(&pgd_lock, flags);
+	spin_lock(&pgd_lock);
 
 	list_for_each_entry(page, &pgd_list, lru) {
 		if (!PagePinned(page)) {
@@ -999,7 +998,7 @@ void xen_mm_pin_all(void)
 		}
 	}
 
-	spin_unlock_irqrestore(&pgd_lock, flags);
+	spin_unlock(&pgd_lock);
 }
 
 /*
@@ -1100,10 +1099,9 @@ static void xen_pgd_unpin(struct mm_struct *mm)
  */
 void xen_mm_unpin_all(void)
 {
-	unsigned long flags;
 	struct page *page;
 
-	spin_lock_irqsave(&pgd_lock, flags);
+	spin_lock(&pgd_lock);
 
 	list_for_each_entry(page, &pgd_list, lru) {
 		if (PageSavePinned(page)) {
@@ -1113,7 +1111,7 @@ void xen_mm_unpin_all(void)
 		}
 	}
 
-	spin_unlock_irqrestore(&pgd_lock, flags);
+	spin_unlock(&pgd_lock);
 }
 
 void xen_activate_mm(struct mm_struct *prev, struct mm_struct *next)
@@ -1432,13 +1430,14 @@ static void *xen_kmap_atomic_pte(struct page *page, enum km_type type)
 {
 	pgprot_t prot = PAGE_KERNEL;
 
+	/*
+	 * We disable highmem allocations for page tables so we should never
+	 * see any calls to kmap_atomic_pte on a highmem page.
+	 */
+	BUG_ON(PageHighMem(page));
+
 	if (PagePinned(page))
 		prot = PAGE_KERNEL_RO;
-
-	if (0 && PageHighMem(page))
-		printk("mapping highpte %lx type %d prot %s\n",
-		       page_to_pfn(page), type,
-		       (unsigned long)pgprot_val(prot) & _PAGE_RW ? "WRITE" : "READ");
 
 	return kmap_atomic_prot(page, type, prot);
 }
@@ -1658,8 +1657,8 @@ static __init void xen_map_identity_early(pmd_t *pmd, unsigned long max_pfn)
 			pte_t pte;
 
 #ifdef CONFIG_X86_32
-                        if (pfn > max_pfn_mapped)
-                                max_pfn_mapped = pfn;
+			if (pfn > max_pfn_mapped)
+				max_pfn_mapped = pfn;
 #endif
 
 			if (!pte_none(pte_page[pteidx]))
@@ -1704,12 +1703,12 @@ __init pgd_t *xen_setup_kernel_pagetable(pgd_t *pgd,
 {
 	pud_t *l3;
 	pmd_t *l2;
-	
+
 	/* max_pfn_mapped is the last pfn mapped in the initial memory
-         * mappings. Considering that on Xen after the kernel mappings we
-         * have the mappings of some pages that don't exist in pfn space, we
-         * set max_pfn_mapped to the last real pfn mapped. */
-        max_pfn_mapped = PFN_DOWN(__pa(xen_start_info->mfn_list));
+	 * mappings. Considering that on Xen after the kernel mappings we
+	 * have the mappings of some pages that don't exist in pfn space, we
+	 * set max_pfn_mapped to the last real pfn mapped. */
+	max_pfn_mapped = PFN_DOWN(__pa(xen_start_info->mfn_list));
 
 	/* Zap identity mapping */
 	init_level4_pgt[0] = __pgd(0);
@@ -1775,8 +1774,8 @@ __init pgd_t *xen_setup_kernel_pagetable(pgd_t *pgd,
 	pmd_t *kernel_pmd;
 
 	max_pfn_mapped = PFN_DOWN(__pa(xen_start_info->pt_base) +
-                                  xen_start_info->nr_pt_frames * PAGE_SIZE +
-                                  512*1024);
+				  xen_start_info->nr_pt_frames * PAGE_SIZE +
+				  512*1024);
 
 	kernel_pmd = m2v(pgd[KERNEL_PGD_BOUNDARY].pgd);
 	memcpy(level2_kernel_pgt, kernel_pmd, sizeof(pmd_t) * PTRS_PER_PMD);

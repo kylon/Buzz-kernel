@@ -313,7 +313,7 @@ marvel_print_po7_ugbge_sym(u64 ugbge_sym)
 	}
 
 	printk("%s      Up Hose Garbage Symptom:\n"
-	       "%s        Source Port: %lld - Dest PID: %lld - OpCode: %s\n", 
+	       "%s        Source Port: %lld - Dest PID: %lld - OpCode: %s\n",
 	       err_print_prefix,
 	       err_print_prefix, 
 	       EXTRACT(ugbge_sym, IO7__PO7_UGBGE_SYM__UPH_SRC_PORT),

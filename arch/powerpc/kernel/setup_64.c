@@ -434,16 +434,16 @@ void __init setup_system(void)
 
 static u64 slb0_limit(void)
 {
-        if (cpu_has_feature(CPU_FTR_1T_SEGMENT)) {
-                return 1UL << SID_SHIFT_1T;
-        }
-        return 1UL << SID_SHIFT;
+	if (cpu_has_feature(CPU_FTR_1T_SEGMENT)) {
+		return 1UL << SID_SHIFT_1T;
+	}
+	return 1UL << SID_SHIFT;
 }
 
 #ifdef CONFIG_IRQSTACKS
 static void __init irqstack_early_init(void)
 {
-        u64 limit = slb0_limit();
+	u64 limit = slb0_limit();
 	unsigned int i;
 
 	/*

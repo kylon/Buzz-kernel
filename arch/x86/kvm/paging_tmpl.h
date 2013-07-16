@@ -319,31 +319,31 @@ static u64 *FNAME(fetch)(struct kvm_vcpu *vcpu, gva_t addr,
 		}
 
 		if (is_shadow_present_pte(*sptep) && !is_large_pte(*sptep)) {
-                        struct kvm_mmu_page *child;
-                        unsigned direct_access;
- 
-                        if (level != gw->level)
-                                continue;
- 
-                        /*
-                         * For the direct sp, if the guest pte's dirty bit
-                         * changed form clean to dirty, it will corrupt the
-                         * sp's access: allow writable in the read-only sp,
-                         * so we should update the spte at this point to get
-                         * a new sp with the correct access.
-                         */
-                        direct_access = gw->pt_access & gw->pte_access;
-                        if (!is_dirty_gpte(gw->ptes[gw->level - 1]))
-                                direct_access &= ~ACC_WRITE_MASK;
- 
-                        child = page_header(*sptep & PT64_BASE_ADDR_MASK);
-                        if (child->role.access == direct_access)
-                                continue;
- 
-                        mmu_page_remove_parent_pte(child, sptep);
-                        __set_spte(sptep, shadow_trap_nonpresent_pte);
-                        kvm_flush_remote_tlbs(vcpu->kvm);
-                }
+			struct kvm_mmu_page *child;
+			unsigned direct_access;
+
+			if (level != gw->level)
+				continue;
+
+			/*
+			 * For the direct sp, if the guest pte's dirty bit
+			 * changed form clean to dirty, it will corrupt the
+			 * sp's access: allow writable in the read-only sp,
+			 * so we should update the spte at this point to get
+			 * a new sp with the correct access.
+			 */
+			direct_access = gw->pt_access & gw->pte_access;
+			if (!is_dirty_gpte(gw->ptes[gw->level - 1]))
+				direct_access &= ~ACC_WRITE_MASK;
+
+			child = page_header(*sptep & PT64_BASE_ADDR_MASK);
+			if (child->role.access == direct_access)
+				continue;
+
+			mmu_page_remove_parent_pte(child, sptep);
+			__set_spte(sptep, shadow_trap_nonpresent_pte);
+			kvm_flush_remote_tlbs(vcpu->kvm);
+		}
 
 		if (is_large_pte(*sptep)) {
 			rmap_remove(vcpu->kvm, sptep);
@@ -516,18 +516,23 @@ static void FNAME(invlpg)(struct kvm_vcpu *vcpu, gva_t gva)
 	spin_unlock(&vcpu->kvm->mmu_lock);
 }
 
-static gpa_t FNAME(gva_to_gpa)(struct kvm_vcpu *vcpu, gva_t vaddr)
+static gpa_t FNAME(gva_to_gpa)(struct kvm_vcpu *vcpu, gva_t vaddr, u32 access,
+			       u32 *error)
 {
 	struct guest_walker walker;
 	gpa_t gpa = UNMAPPED_GVA;
 	int r;
 
-	r = FNAME(walk_addr)(&walker, vcpu, vaddr, 0, 0, 0);
+	r = FNAME(walk_addr)(&walker, vcpu, vaddr,
+			     !!(access & PFERR_WRITE_MASK),
+			     !!(access & PFERR_USER_MASK),
+			     !!(access & PFERR_FETCH_MASK));
 
 	if (r) {
 		gpa = gfn_to_gpa(walker.gfn);
 		gpa |= vaddr & ~PAGE_MASK;
-	}
+	} else if (error)
+		*error = walker.error_code;
 
 	return gpa;
 }

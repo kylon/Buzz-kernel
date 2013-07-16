@@ -20,7 +20,7 @@
 extern int sb1250_m3_workaround_needed(void);
 #endif
 
-#define BCM1250_M3_WAR  sb1250_m3_workaround_needed()
+#define BCM1250_M3_WAR	sb1250_m3_workaround_needed()
 #define SIBYTE_1956_WAR	1
 
 #else

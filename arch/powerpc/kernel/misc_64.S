@@ -414,7 +414,7 @@ _GLOBAL(scom970_write)
 
 /*
  * Create a kernel thread
- * kernel_thread(fn, arg, flags)
+ *   kernel_thread(fn, arg, flags)
  */
 _GLOBAL(kernel_thread)
 	std	r29,-24(r1)
@@ -472,7 +472,7 @@ _GLOBAL(kexec_wait)
 	bl	1f
 1:	mflr	r5
 	addi	r5,r5,kexec_flag-1b
-        
+
 99:	HMT_LOW
 #ifdef CONFIG_KEXEC		/* use no memory without kexec */
 	lwz	r4,0(r5)
@@ -496,7 +496,6 @@ kexec_flag:
  * note: this is a terminal routine, it does not save lr
  *
  * get phys id from paca
-
  * switch to real mode
  * mark the paca as no longer used
  * join other cpus in kexec_wait(phys_id)
@@ -504,10 +503,10 @@ kexec_flag:
 _GLOBAL(kexec_smp_wait)
 	lhz	r3,PACAHWCPUID(r13)
 	bl	real_mode
-	
-	li      r4,KEXEC_STATE_REAL_MODE
-        stb     r4,PACAKEXECSTATE(r13)
-        SYNC
+
+	li	r4,KEXEC_STATE_REAL_MODE
+	stb	r4,PACAKEXECSTATE(r13)
+	SYNC
 
 	b	.kexec_wait
 

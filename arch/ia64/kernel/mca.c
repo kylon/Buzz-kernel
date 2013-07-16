@@ -1851,7 +1851,7 @@ ia64_mca_cpu_init(void *cpu_data)
 			first_time = 0;
 		} else
 			data = (void *)__get_free_pages(GFP_KERNEL,
-                                                        get_order(sz));
+							get_order(sz));
 		if (!data)
 			panic("Could not allocate MCA memory for cpu %d\n",
 					cpu);

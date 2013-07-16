@@ -516,7 +516,7 @@ void __cpuinit select_idle_routine(const struct cpuinfo_x86 *c)
 		printk(KERN_INFO "using mwait in idle threads.\n");
 		pm_idle = mwait_idle;
 	} else if (cpu_has_amd_erratum(amd_erratum_400)) {
-                /* E400: APIC timer interrupt does not wake up CPU from C1e */
+		/* E400: APIC timer interrupt does not wake up CPU from C1e */
 		printk(KERN_INFO "using C1E aware idle routine\n");
 		pm_idle = c1e_idle;
 	} else

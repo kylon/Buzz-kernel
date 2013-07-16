@@ -1045,7 +1045,7 @@ SYSCALL_DEFINE4(osf_wait4, pid_t, pid, int __user *, ustatus, int, options,
 		
 	set_fs (KERNEL_DS);
 	ret = sys_wait4(pid, (unsigned int __user *) &status, options,
-                        (struct rusage __user *) &r);
+			(struct rusage __user *) &r);
 	set_fs (old_fs);
 
 	if (!access_ok(VERIFY_WRITE, ur, sizeof(*ur)))

@@ -140,7 +140,7 @@ void mce_amd_feature_init(struct cpuinfo_x86 *c)
 				address = (low & MASK_BLKPTR_LO) >> 21;
 				if (!address)
 					break;
-					
+
 				address += MCG_XBLK_ADDR;
 			} else
 				++address;
@@ -149,7 +149,7 @@ void mce_amd_feature_init(struct cpuinfo_x86 *c)
 				break;
 
 			if (!(high & MASK_VALID_HI))
-                                continue;
+				continue;
 
 			if (!(high & MASK_CNTP_HI)  ||
 			     (high & MASK_LOCKED_HI))

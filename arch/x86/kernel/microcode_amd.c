@@ -126,33 +126,33 @@ static int get_matching_microcode(int cpu, void *mc, int rev)
 
 static unsigned int verify_ucode_size(int cpu, const u8 *buf, unsigned int size)
 {
-        struct cpuinfo_x86 *c = &cpu_data(cpu);
-        unsigned int max_size, actual_size;
+	struct cpuinfo_x86 *c = &cpu_data(cpu);
+	unsigned int max_size, actual_size;
 
 #define F1XH_MPB_MAX_SIZE 2048
 #define F14H_MPB_MAX_SIZE 1824
 #define F15H_MPB_MAX_SIZE 4096
- 
-        switch (c->x86) {
-        case 0x14:
-                max_size = F14H_MPB_MAX_SIZE;
-                break;
-        case 0x15:
-                max_size = F15H_MPB_MAX_SIZE;
-                break;
-        default:
-                max_size = F1XH_MPB_MAX_SIZE;
-                break;
-        }
- 
-        actual_size = buf[4] + (buf[5] << 8);
- 
-        if (actual_size > size || actual_size > max_size) {
-                pr_err("section size mismatch\n");
-                return 0;
-        }
- 
-        return actual_size;
+
+	switch (c->x86) {
+	case 0x14:
+		max_size = F14H_MPB_MAX_SIZE;
+		break;
+	case 0x15:
+		max_size = F15H_MPB_MAX_SIZE;
+		break;
+	default:
+		max_size = F1XH_MPB_MAX_SIZE;
+		break;
+	}
+
+	actual_size = buf[4] + (buf[5] << 8);
+
+	if (actual_size > size || actual_size > max_size) {
+		pr_err("section size mismatch\n");
+		return 0;
+	}
+
+	return actual_size;
 }
 
 static int apply_microcode_amd(int cpu)
@@ -210,16 +210,17 @@ get_next_ucode(int cpu, const u8 *buf, unsigned int size, unsigned int *mc_size)
 	}
 
 	actual_size = verify_ucode_size(cpu, buf, size);
-        if (!actual_size)
-                return NULL;
+	if (!actual_size)
+		return NULL;
 
 	mc = vmalloc(actual_size);
-        if (!mc)
+	if (!mc)
 		return NULL;
+
 	memset(mc, 0, actual_size);
-        get_ucode_data(mc, buf + UCODE_CONTAINER_SECTION_HDR, actual_size);
-        *mc_size = actual_size + UCODE_CONTAINER_SECTION_HDR;
-        
+	get_ucode_data(mc, buf + UCODE_CONTAINER_SECTION_HDR, actual_size);
+	*mc_size = actual_size + UCODE_CONTAINER_SECTION_HDR;
+
 	return mc;
 }
 

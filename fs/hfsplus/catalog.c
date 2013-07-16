@@ -330,9 +330,9 @@ int hfsplus_rename_cat(u32 cnid,
 	if (err)
 		goto out;
 	if (src_fd.entrylength > sizeof(entry) || src_fd.entrylength < 0) {
-                err = -EIO;
-                goto out;
-        }
+		err = -EIO;
+		goto out;
+	}
 
 	hfs_bnode_read(src_fd.bnode, &entry, src_fd.entryoffset,
 				src_fd.entrylength);

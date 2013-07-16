@@ -706,6 +706,9 @@ int dhd_set_suspend(int value, dhd_pub_t *dhd)
 			/* set pfn */
 			dhd_set_pfn(dhd, 1);
 #endif
+#ifdef MMC_RECOVER
+			dhdsdio_set_mmc_recover(1);
+#endif
 			/* indicate wl_iw screen off */
 			wl_iw_set_screen_off(1);
 
@@ -732,6 +735,9 @@ int dhd_set_suspend(int value, dhd_pub_t *dhd)
 
 #ifdef WLAN_PFN
 			dhd_set_pfn(dhd, 0);
+#endif
+#ifdef MMC_RECOVER
+			dhdsdio_set_mmc_recover(0);
 #endif
 			/* indicate wl_iw screen on */
 			wl_iw_set_screen_off(0);

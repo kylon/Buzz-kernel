@@ -12,6 +12,7 @@ USB device nodes are created under /dev/usb/ or someplace similar.  The
 "devices" file is available in debugfs, typically as
 /sys/kernel/debug/usb/devices.
 
+
 **NOTE**: If /proc/bus/usb appears empty, and a host controller
 	  driver has been linked, then you need to mount the
 	  filesystem.  Issue the command (as root):
@@ -124,14 +125,13 @@ T:  Bus=dd Lev=dd Prnt=dd Port=dd Cnt=dd Dev#=ddd Spd=dddd MxCh=dd
     Speed may be:
     	1.5	Mbit/s for low speed USB
 	12	Mbit/s for full speed USB
-	480     Mbit/s for high speed USB (added for USB 2.0);
-                 also used for Wireless USB, which has no fixed speed
-    5000    Mbit/s for SuperSpeed USB (added for USB 3.0)
- 
-+    For reasons lost in the mists of time, the Port number is always
-+    too low by 1.  For example, a device plugged into port 4 will
-+    show up with "Port=03".
+	480	Mbit/s for high speed USB (added for USB 2.0);
+		  also used for Wireless USB, which has no fixed speed
+	5000	Mbit/s for SuperSpeed USB (added for USB 3.0)
 
+    For reasons lost in the mists of time, the Port number is always
+    too low by 1.  For example, a device plugged into port 4 will
+    show up with "Port=03".
 
 Bandwidth info:
 B:  Alloc=ddd/ddd us (xx%), #Int=ddd, #Iso=ddd

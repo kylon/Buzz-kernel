@@ -32,7 +32,7 @@ int __init oprofile_arch_init(struct oprofile_operations *ops)
 #ifdef CONFIG_X86_LOCAL_APIC
 	ret = op_nmi_init(ops);
 #endif
-        nmi_timer = (ret != 0);
+	nmi_timer = (ret != 0);
 #ifdef CONFIG_X86_IO_APIC
 	if (nmi_timer)
 		ret = op_nmi_timer_init(ops);
@@ -47,6 +47,6 @@ void oprofile_arch_exit(void)
 {
 #ifdef CONFIG_X86_LOCAL_APIC
 	if (!nmi_timer)
-                op_nmi_exit();
+		op_nmi_exit();
 #endif
 }

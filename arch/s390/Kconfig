@@ -189,7 +189,7 @@ config SYSVIPC_COMPAT
 	default y
 
 config KEYS_COMPAT
-        def_bool y if COMPAT && KEYS
+	def_bool y if COMPAT && KEYS
 
 config AUDIT_ARCH
 	bool

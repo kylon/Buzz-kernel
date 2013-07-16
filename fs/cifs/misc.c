@@ -585,7 +585,7 @@ is_valid_oplock_break(struct smb_hdr *buf, struct TCP_Server_Info *srv)
 				if (pSMB->OplockLevel == 0)
 					pCifsInode->clientCanCacheRead = false;
 				else if (pSMB->OplockLevel)
-                                        pCifsInode->clientCanCacheRead = true;
+					pCifsInode->clientCanCacheRead = true;
 
 				rc = slow_work_enqueue(&netfile->oplock_break);
 				if (rc) {

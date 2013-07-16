@@ -1066,6 +1066,9 @@ static int acpi_processor_setup_cpuidle(struct acpi_processor *pr)
 	if (pr->flags.power == 0) {
 		return -EINVAL;
 	}
+	
+	if (!dev)
+                return -EINVAL;
 
 	dev->cpu = pr->id;
 	for (i = 0; i < CPUIDLE_STATE_MAX; i++) {

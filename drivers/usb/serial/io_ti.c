@@ -573,6 +573,9 @@ static void chase_port(struct edgeport_port *port, unsigned long timeout,
 	struct tty_struct *tty = tty_port_tty_get(&port->port->port);
 	wait_queue_t wait;
 	unsigned long flags;
+	
+	if (!tty)
+          return;
 
 	if (!timeout)
 		timeout = (HZ * EDGE_CLOSING_WAIT)/100;

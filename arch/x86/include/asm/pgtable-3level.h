@@ -78,8 +78,8 @@ static inline void pud_clear(pud_t *pudp)
 	 * TLB via cr3 if the top-level pgd is changed...
 	 *
 	 * Currently all places where pud_clear() is called either have
-         * flush_tlb_mm() followed or don't need TLB flush (x86_64 code or
-         * pud_clear_bad()), so we don't need TLB flush here.
+	 * flush_tlb_mm() followed or don't need TLB flush (x86_64 code or
+	 * pud_clear_bad()), so we don't need TLB flush here.
 	 */
 }
 

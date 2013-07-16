@@ -372,6 +372,8 @@ invalidate_complete_page2(struct address_space *mapping, struct page *page)
 {
 	if (page->mapping != mapping)
 		return 0;
+	
+	clear_page_mlock(page);
 
 	if (page_has_private(page) && !try_to_release_page(page, GFP_KERNEL))
 		return 0;
@@ -380,7 +382,6 @@ invalidate_complete_page2(struct address_space *mapping, struct page *page)
 	if (PageDirty(page))
 		goto failed;
 
-	clear_page_mlock(page);
 	BUG_ON(page_has_private(page));
 	__remove_from_page_cache(page);
 	spin_unlock_irq(&mapping->tree_lock);

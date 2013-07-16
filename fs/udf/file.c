@@ -53,11 +53,11 @@ static void __udf_adinicb_readpage(struct page *page)
 	SetPageUptodate(page);
 	kunmap(page);
 }
- 
+
 static int udf_adinicb_readpage(struct file *file, struct page *page)
 {
-        BUG_ON(!PageLocked(page));
-        __udf_adinicb_readpage(page);
+	BUG_ON(!PageLocked(page));
+	__udf_adinicb_readpage(page);
 	unlock_page(page);
 
 	return 0;
@@ -83,22 +83,22 @@ static int udf_adinicb_writepage(struct page *page,
 }
 
 static int udf_adinicb_write_begin(struct file *file,
-                        struct address_space *mapping, loff_t pos,
-                        unsigned len, unsigned flags, struct page **pagep,
-                        void **fsdata)
+			struct address_space *mapping, loff_t pos,
+			unsigned len, unsigned flags, struct page **pagep,
+			void **fsdata)
 {
-        struct page *page;
- 
-        if (WARN_ON_ONCE(pos >= PAGE_CACHE_SIZE))
-                return -EIO;
-        page = grab_cache_page_write_begin(mapping, 0, flags);
-        if (!page)
-                return -ENOMEM;
-        *pagep = page;
- 
-        if (!PageUptodate(page) && len != PAGE_CACHE_SIZE)
-                __udf_adinicb_readpage(page);
-        return 0;
+	struct page *page;
+
+	if (WARN_ON_ONCE(pos >= PAGE_CACHE_SIZE))
+		return -EIO;
+	page = grab_cache_page_write_begin(mapping, 0, flags);
+	if (!page)
+		return -ENOMEM;
+	*pagep = page;
+
+	if (!PageUptodate(page) && len != PAGE_CACHE_SIZE)
+		__udf_adinicb_readpage(page);
+	return 0;
 }
 
 static int udf_adinicb_write_end(struct file *file,
@@ -123,8 +123,8 @@ const struct address_space_operations udf_adinicb_aops = {
 	.readpage	= udf_adinicb_readpage,
 	.writepage	= udf_adinicb_writepage,
 	.sync_page	= block_sync_page,
-	.write_begin    = udf_adinicb_write_begin,
-        .write_end      = udf_adinicb_write_end,
+	.write_begin	= udf_adinicb_write_begin,
+	.write_end	= udf_adinicb_write_end,
 };
 
 static ssize_t udf_file_aio_write(struct kiocb *iocb, const struct iovec *iov,

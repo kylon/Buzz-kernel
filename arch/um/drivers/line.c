@@ -727,8 +727,8 @@ struct winch {
 
 static void free_winch(struct winch *winch, int free_irq_ok)
 {
-        if (free_irq_ok)
-                free_irq(WINCH_IRQ, winch);
+	if (free_irq_ok)
+		free_irq(WINCH_IRQ, winch);
 
 	list_del(&winch->list);
 

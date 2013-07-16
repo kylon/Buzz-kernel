@@ -558,7 +558,7 @@ static int fat_statfs(struct dentry *dentry, struct kstatfs *buf)
 	buf->f_bavail = sbi->free_clusters;
 	buf->f_fsid.val[0] = (u32)id;
 	buf->f_fsid.val[1] = (u32)(id >> 32);
-	buf->f_namelen = sbi->options.isvfat ? 260 : 12;
+	buf->f_namelen = sbi->options.isvfat ? FAT_LFN_LEN : 12;
 
 	return 0;
 }
@@ -1215,7 +1215,6 @@ int fat_fill_super(struct super_block *sb, void *data, int silent,
 	struct inode *root_inode = NULL, *fat_inode = NULL;
 	struct buffer_head *bh;
 	struct fat_boot_sector *b;
-	struct fat_boot_bsx *bsx;
 	struct msdos_sb_info *sbi;
 	u16 logical_sector_size;
 	u32 total_sectors, total_clusters, fat_clusters, rootdir_sectors;
@@ -1358,8 +1357,6 @@ int fat_fill_super(struct super_block *sb, void *data, int silent,
 			goto out_fail;
 		}
 
-		bsx = (struct fat_boot_bsx *)(bh->b_data + FAT32_BSX_OFFSET);
-
 		fsinfo = (struct fat_boot_fsinfo *)fsinfo_bh->b_data;
 		if (!IS_FSINFO(fsinfo)) {
 			printk(KERN_WARNING "FAT: Invalid FSINFO signature: "
@@ -1375,13 +1372,7 @@ int fat_fill_super(struct super_block *sb, void *data, int silent,
 		}
 
 		brelse(fsinfo_bh);
-	} else {
-		bsx = (struct fat_boot_bsx *)(bh->b_data + FAT16_BSX_OFFSET);
 	}
-
-	/* interpret volume ID as a little endian 32 bit integer */
-	sbi->vol_id = (((u32)bsx->vol_id[0]) | ((u32)bsx->vol_id[1] << 8) |
-		((u32)bsx->vol_id[2] << 16) | ((u32)bsx->vol_id[3] << 24));
 
 	sbi->dir_per_block = sb->s_blocksize / sizeof(struct msdos_dir_entry);
 	sbi->dir_per_block_bits = ffs(sbi->dir_per_block) - 1;

@@ -27,8 +27,8 @@
 #define HPET_DEV_FSB_CAP		0x1000
 #define HPET_DEV_PERI_CAP		0x2000
 
-#define HPET_MIN_CYCLES                        128
-#define HPET_MIN_PROG_DELTA            (HPET_MIN_CYCLES + (HPET_MIN_CYCLES >> 1))
+#define HPET_MIN_CYCLES			128
+#define HPET_MIN_PROG_DELTA		(HPET_MIN_CYCLES + (HPET_MIN_CYCLES >> 1))
 
 #define EVT_TO_HPET_DEV(evt) container_of(evt, struct hpet_dev, evt)
 
@@ -302,8 +302,8 @@ static void hpet_legacy_clockevent_register(void)
 	hpet_clockevent.max_delta_ns = clockevent_delta2ns(0x7FFFFFFF,
 							   &hpet_clockevent);
 	/* Setup minimum reprogramming delta. */
-        hpet_clockevent.min_delta_ns = clockevent_delta2ns(HPET_MIN_PROG_DELTA,
-                                                           &hpet_clockevent);
+	hpet_clockevent.min_delta_ns = clockevent_delta2ns(HPET_MIN_PROG_DELTA,
+							   &hpet_clockevent);
 
 	/*
 	 * Start hpet with the boot cpu mask and make it
@@ -391,25 +391,25 @@ static int hpet_next_event(unsigned long delta,
 
 	/*
 	 * HPETs are a complete disaster. The compare register is
-         * based on a equal comparison and neither provides a less
-         * than or equal functionality (which would require to take
-         * the wraparound into account) nor a simple count down event
-         * mode. Further the write to the comparator register is
-         * delayed internally up to two HPET clock cycles in certain
-         * chipsets (ATI, ICH9,10). Some newer AMD chipsets have even
-         * longer delays. We worked around that by reading back the
-         * compare register, but that required another workaround for
-         * ICH9,10 chips where the first readout after write can
-         * return the old stale value. We already had a minimum
-         * programming delta of 5us enforced, but a NMI or SMI hitting
-         * between the counter readout and the comparator write can
-         * move us behind that point easily. Now instead of reading
-         * the compare register back several times, we make the ETIME
-         * decision based on the following: Return ETIME if the
-         * counter value after the write is less than HPET_MIN_CYCLES
-         * away from the event or if the counter is already ahead of
-         * the event. The minimum programming delta for the generic
-         * clockevents code is set to 1.5 * HPET_MIN_CYCLES.
+	 * based on a equal comparison and neither provides a less
+	 * than or equal functionality (which would require to take
+	 * the wraparound into account) nor a simple count down event
+	 * mode. Further the write to the comparator register is
+	 * delayed internally up to two HPET clock cycles in certain
+	 * chipsets (ATI, ICH9,10). Some newer AMD chipsets have even
+	 * longer delays. We worked around that by reading back the
+	 * compare register, but that required another workaround for
+	 * ICH9,10 chips where the first readout after write can
+	 * return the old stale value. We already had a minimum
+	 * programming delta of 5us enforced, but a NMI or SMI hitting
+	 * between the counter readout and the comparator write can
+	 * move us behind that point easily. Now instead of reading
+	 * the compare register back several times, we make the ETIME
+	 * decision based on the following: Return ETIME if the
+	 * counter value after the write is less than HPET_MIN_CYCLES
+	 * away from the event or if the counter is already ahead of
+	 * the event. The minimum programming delta for the generic
+	 * clockevents code is set to 1.5 * HPET_MIN_CYCLES.
 	 */
 	res = (s32)(cnt - (u32)hpet_readl(HPET_COUNTER));
 
@@ -610,9 +610,9 @@ static void hpet_msi_capability_lookup(unsigned int start_timer)
 
 	if (hpet_msi_disable)
 		return;
-		
-        if (boot_cpu_has(X86_FEATURE_ARAT))
-                return;
+
+	if (boot_cpu_has(X86_FEATURE_ARAT))
+		return;
 	id = hpet_readl(HPET_ID);
 
 	num_timers = ((id & HPET_ID_NUMBER) >> HPET_ID_NUMBER_SHIFT);
@@ -934,20 +934,20 @@ static __init int hpet_late_init(void)
 
 	if (!hpet_virt_address)
 		return -ENODEV;
-	
+
 	if (hpet_readl(HPET_ID) & HPET_ID_LEGSUP)
-                hpet_msi_capability_lookup(2);
-        else
-                hpet_msi_capability_lookup(0);
+		hpet_msi_capability_lookup(2);
+	else
+		hpet_msi_capability_lookup(0);
 
 	hpet_reserve_platform_timers(hpet_readl(HPET_ID));
 	hpet_print_config();
 
 	if (hpet_msi_disable)
 		return 0;
-	
+
 	if (boot_cpu_has(X86_FEATURE_ARAT))
-                return 0;
+		return 0;
 
 	for_each_online_cpu(cpu) {
 		hpet_cpuhp_notify(NULL, CPU_ONLINE, (void *)(long)cpu);
@@ -962,7 +962,7 @@ fs_initcall(hpet_late_init);
 
 void hpet_disable(void)
 {
-	if (is_hpet_capable()) {
+	if (is_hpet_capable() && hpet_virt_address) {
 		unsigned long cfg = hpet_readl(HPET_CFG);
 
 		if (hpet_legacy_int_enabled) {

@@ -569,10 +569,10 @@ static void __init mpic_scan_ht_pics(struct mpic *mpic)
 #ifdef CONFIG_SMP
 static int irq_choose_cpu(unsigned int virt_irq)
 {
-        cpumask_t mask;
+	cpumask_t mask;
 	int cpuid;
-        
-        cpumask_copy(&mask, irq_desc[virt_irq].affinity);
+
+	cpumask_copy(&mask, irq_desc[virt_irq].affinity);
 	if (cpus_equal(mask, CPU_MASK_ALL)) {
 		static int irq_rover;
 		static DEFINE_SPINLOCK(irq_rover_lock);
@@ -595,12 +595,12 @@ static int irq_choose_cpu(unsigned int virt_irq)
 		spin_unlock_irqrestore(&irq_rover_lock, flags);
 	} else {
 		cpumask_t tmp;
- 
-                cpus_and(tmp, cpu_online_map, mask);
- 
-                if (cpus_empty(tmp))
+
+		cpus_and(tmp, cpu_online_map, mask);
+
+		if (cpus_empty(tmp))
 			goto do_round_robin;
-		
+
 		cpuid = first_cpu(tmp);
 	}
 

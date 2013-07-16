@@ -161,17 +161,17 @@ out:
 
 void acct_arg_size(struct linux_binprm *bprm, unsigned long pages)
 {
-        struct mm_struct *mm = current->mm;
-        long diff = (long)(pages - bprm->vma_pages);
- 
-        if (!mm || !diff)
-                return;
- 
-        bprm->vma_pages = pages;
- 
-        down_write(&mm->mmap_sem);
-        mm->total_vm += diff;
-        up_write(&mm->mmap_sem);
+	struct mm_struct *mm = current->mm;
+	long diff = (long)(pages - bprm->vma_pages);
+
+	if (!mm || !diff)
+		return;
+
+	bprm->vma_pages = pages;
+
+	down_write(&mm->mmap_sem);
+	mm->total_vm += diff;
+	up_write(&mm->mmap_sem);
 }
 
 struct page *get_arg_page(struct linux_binprm *bprm, unsigned long pos,
@@ -195,9 +195,9 @@ struct page *get_arg_page(struct linux_binprm *bprm, unsigned long pos,
 	if (write) {
 		unsigned long size = bprm->vma->vm_end - bprm->vma->vm_start;
 		struct rlimit *rlim;
-                
-                acct_arg_size(bprm, size / PAGE_SIZE);
-                
+
+		acct_arg_size(bprm, size / PAGE_SIZE);
+
 		/*
 		 * We've historically supported up to 32 pages (ARG_MAX)
 		 * of argument strings even with small stacks
@@ -264,10 +264,10 @@ static int __bprm_mm_init(struct linux_binprm *bprm)
 	vma->vm_start = vma->vm_end - PAGE_SIZE;
 	vma->vm_flags = VM_STACK_FLAGS;
 	vma->vm_page_prot = vm_get_page_prot(vma->vm_flags);
-	
+
 	err = security_file_mmap(NULL, 0, 0, 0, vma->vm_start, 1);
-        if (err)
-                goto err;
+	if (err)
+		goto err;
 
 	err = insert_vm_struct(mm, vma);
 	if (err)
@@ -402,9 +402,9 @@ static int count(char __user * __user * argv, int max)
 			argv++;
 			if (i++ >= max)
 				return -E2BIG;
-			
+
 			if (fatal_signal_pending(current))
-                                return -ERESTARTNOHAND;
+				return -ERESTARTNOHAND;
 			cond_resched();
 		}
 	}
@@ -447,11 +447,11 @@ static int copy_strings(int argc, char __user * __user * argv,
 
 		while (len > 0) {
 			int offset, bytes_to_copy;
-			
+
 			if (fatal_signal_pending(current)) {
-                                ret = -ERESTARTNOHAND;
-                                goto out;
-                        }			
+				ret = -ERESTARTNOHAND;
+				goto out;
+			}
 			cond_resched();
 
 			offset = pos % PAGE_SIZE;
@@ -629,11 +629,11 @@ int setup_arg_pages(struct linux_binprm *bprm,
 #else
 	stack_top = arch_align_stack(stack_top);
 	stack_top = PAGE_ALIGN(stack_top);
-	
+
 	if (unlikely(stack_top < mmap_min_addr) ||
-            unlikely(vma->vm_end - vma->vm_start >= stack_top - mmap_min_addr))
-                return -ENOMEM;
-                
+	    unlikely(vma->vm_end - vma->vm_start >= stack_top - mmap_min_addr))
+		return -ENOMEM;
+
 	stack_shift = vma->vm_end - stack_top;
 
 	bprm->p -= stack_shift;
@@ -1008,8 +1008,8 @@ int flush_old_exec(struct linux_binprm * bprm)
 		goto out;
 
 	bprm->mm = NULL;		/* We're using it now */
-       
-        set_fs(USER_DS);
+
+	set_fs(USER_DS);
 	current->flags &= ~PF_RANDOMIZE;
 	flush_thread();
 	current->personality &= ~bprm->per_clear;
@@ -1108,8 +1108,23 @@ void free_bprm(struct linux_binprm *bprm)
 		mutex_unlock(&current->cred_guard_mutex);
 		abort_creds(bprm->cred);
 	}
+	/* If a binfmt changed the interp, free it. */
+	if (bprm->interp != bprm->filename)
+		kfree(bprm->interp);
 	kfree(bprm);
 }
+
+int bprm_change_interp(char *interp, struct linux_binprm *bprm)
+{
+	/* If a binfmt changed the interp, free it first. */
+	if (bprm->interp != bprm->filename)
+		kfree(bprm->interp);
+	bprm->interp = kstrdup(interp, GFP_KERNEL);
+	if (!bprm->interp)
+		return -ENOMEM;
+	return 0;
+}
+EXPORT_SYMBOL(bprm_change_interp);
 
 /*
  * install the new credentials for this executable
@@ -1270,6 +1285,10 @@ int search_binary_handler(struct linux_binprm *bprm,struct pt_regs *regs)
 	int try,retval;
 	struct linux_binfmt *fmt;
 
+	/* This allows 4 levels of binfmt rewrites before failing hard. */
+	if (depth > 5)
+		return -ELOOP;
+
 	retval = security_bprm_check(bprm);
 	if (retval)
 		return retval;
@@ -1291,12 +1310,8 @@ int search_binary_handler(struct linux_binprm *bprm,struct pt_regs *regs)
 			if (!try_module_get(fmt->module))
 				continue;
 			read_unlock(&binfmt_lock);
+			bprm->recursion_depth = depth + 1;
 			retval = fn(bprm, regs);
-			/*
-			 * Restore the depth counter to its starting value
-			 * in this call, so we don't have to rely on every
-			 * load_binary function to restore it on return.
-			 */
 			bprm->recursion_depth = depth;
 			if (retval >= 0) {
 				if (depth == 0)
@@ -1428,9 +1443,9 @@ int do_execve(char * filename,
 
 out:
 	if (bprm->mm) {
-                acct_arg_size(bprm, 0);
-                mmput(bprm->mm);
-        }
+		acct_arg_size(bprm, 0);
+		mmput(bprm->mm);
+	}
 
 out_file:
 	if (bprm->file) {

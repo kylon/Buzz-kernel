@@ -143,7 +143,7 @@ static struct __initdata platform_device * mtx1_devs[] = {
 static int __init mtx1_register_devices(void)
 {
 	int rc;
-        
+
 	rc = gpio_request(mtx1_gpio_button[0].gpio,
 					mtx1_gpio_button[0].desc);
 	if (rc < 0) {

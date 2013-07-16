@@ -630,6 +630,9 @@ static int s5k4e1gx_probe_init_sensor(const struct msm_camera_sensor_info *data)
 		}
 	}
 
+	/* 0924: prevent corrupted frame and unstable PCLK */
+	s5k4e1gx_i2c_write_b(s5k4e1gx_client->addr, 0x0105, 0x1);
+
     /* Horng add this 980928 */
 	rc = s5k4e1gx_i2c_write_b(s5k4e1gx_client->addr,
 			S5K4E1GX_REG_MODE_SELECT, S5K4E1GX_MODE_SELECT_SW_STANDBY);
@@ -759,10 +762,15 @@ static int32_t s5k4e1gx_setting(enum msm_s_reg_update rupdate,
 	case S_UPDATE_PERIODIC:
 		if (rt == S_RES_PREVIEW || rt == S_RES_CAPTURE) {
 			struct s5k4e1gx_i2c_reg_conf tbl_1[] = {
-			{
-			    /* Standby */
+#if 0 /* 0924, 0923 for No stopping PCLK */
+			{   /* Standby */
 				S5K4E1GX_REG_MODE_SELECT,
 					S5K4E1GX_MODE_SELECT_SW_STANDBY},
+#else
+			    /* Parameter Hold */
+				{S5K4E1GX_REG_GROUP_PARAMETER_HOLD,
+					S5K4E1GX_GROUP_PARAMETER_HOLD},
+#endif
 			    /* Output Size */
 				{REG_X_OUTPUT_SIZE_MSB,
 					s5k4e1gx_reg_pat[rt].x_output_size_msb},
@@ -785,10 +793,11 @@ static int32_t s5k4e1gx_setting(enum msm_s_reg_update rupdate,
 					s5k4e1gx_reg_pat[rt].h_binning},
 				{REG_V_BINNING,
 					s5k4e1gx_reg_pat[rt].v_binning},
+#if 0 /* 0924 : for No stopping PCLK*/
 			    /* Additional */
  				{S5K4E1GX_REG_MASK_CORRUPTED_FRAME,
 					S5K4E1GX_MASK_CORRUPTED_FRAME}
-
+#endif
 			};
 
 			struct s5k4e1gx_i2c_reg_conf tbl_2[] = {
@@ -818,10 +827,11 @@ static int32_t s5k4e1gx_setting(enum msm_s_reg_update rupdate,
 					s5k4e1gx_reg_pat[rt].v_h_strength},
 				{REG_DATA_PCLK_STRENGTH,
 					s5k4e1gx_reg_pat[rt].data_pclk_strength},
-
+#if 0 /* 0923 for No stopping PCLK */
 			    /* Parameter Hold */
 				{S5K4E1GX_REG_GROUP_PARAMETER_HOLD,
 					S5K4E1GX_GROUP_PARAMETER_HOLD},
+#endif
 				{REG_ANALOGUE_GAIN_CODE_GLOBAL_MSB,
 					s5k4e1gx_reg_pat[rt].analogue_gain_code_global_msb},
 				{REG_ANALOGUE_GAIN_CODE_GLOBAL_LSB,
@@ -830,11 +840,11 @@ static int32_t s5k4e1gx_setting(enum msm_s_reg_update rupdate,
 					s5k4e1gx_reg_pat[rt].coarse_integration_time_msb},
 				{REG_COARSE_INTEGRATION_TIME_LSB,
 					s5k4e1gx_reg_pat[rt].coarse_integration_time_lsb},
+#if 0 /* 0924: for No stopping PCLK */
 			    /* Parameter Unhold */
 				{S5K4E1GX_REG_GROUP_PARAMETER_HOLD,
 					S5K4E1GX_GROUP_PARAMETER_UNHOLD},
 			    /* Streaming ON*/
-#ifndef CONFIG_MSM_CAMERA_7X30
 			{S5K4E1GX_REG_MODE_SELECT, S5K4E1GX_MODE_SELECT_STREAM},
 #endif
 			};
@@ -876,18 +886,20 @@ static int32_t s5k4e1gx_setting(enum msm_s_reg_update rupdate,
 				ARRAY_SIZE(tbl_2));
 			if (rc < 0)
 				return rc;
-#ifdef CONFIG_MSM_CAMERA_7X30
-			/*only streaming on in preview mode*/
-			if(rt == S_RES_PREVIEW){
-				mdelay(200);
-				s5k4e1gx_i2c_write_b(
+
+#if 1 /* 0924: for No stopping PCLK*/
+			/* solve greenish: only release for preview */
+			if (s5k4e1gx_ctrl->sensormode == SENSOR_PREVIEW_MODE) {
+			pr_info("%s: set group parameter unhold\n", __func__);
+				rc = s5k4e1gx_i2c_write_b(
 					s5k4e1gx_client->addr,
-					S5K4E1GX_REG_MODE_SELECT,
-					S5K4E1GX_MODE_SELECT_STREAM);
-			} else {
-				mdelay(100);
+					S5K4E1GX_REG_GROUP_PARAMETER_HOLD,
+					S5K4E1GX_GROUP_PARAMETER_UNHOLD);
+				if (rc < 0)
+					return rc;
 			}
 #endif
+
 			mdelay(5);
 			rc = s5k4e1gx_test(s5k4e1gx_ctrl->set_test);
 			if (rc < 0)
@@ -1389,6 +1401,8 @@ static int32_t s5k4e1gx_write_exp_gain(uint16_t gain, uint32_t line)
 	/* update gain registers */
 	gain_msb = (gain & 0xFF00) >> 8;
 	gain_lsb = gain & 0x00FF;
+	/* 0924  for No stopping PCLK */
+#if 0
 	tbl[0].waddr = S5K4E1GX_REG_GROUP_PARAMETER_HOLD;
 	tbl[0].bdata = S5K4E1GX_GROUP_PARAMETER_HOLD;
 	tbl[1].waddr = REG_ANALOGUE_GAIN_CODE_GLOBAL_MSB;
@@ -1396,6 +1410,24 @@ static int32_t s5k4e1gx_write_exp_gain(uint16_t gain, uint32_t line)
 	tbl[2].waddr = REG_ANALOGUE_GAIN_CODE_GLOBAL_LSB;
 	tbl[2].bdata = gain_lsb;
 	rc = s5k4e1gx_i2c_write_table(&tbl[0], ARRAY_SIZE(tbl));
+#else
+	if (s5k4e1gx_ctrl->sensormode == SENSOR_PREVIEW_MODE) {
+		rc = s5k4e1gx_i2c_write_b(s5k4e1gx_client->addr,
+					  S5K4E1GX_REG_GROUP_PARAMETER_HOLD,
+					  S5K4E1GX_GROUP_PARAMETER_HOLD);
+		if (rc < 0) {
+			pr_err("s5k3e2fx_i2c_write_b failed on line %d\n",
+				__LINE__);
+			return rc;
+		}
+	}
+
+	tbl[0].waddr = REG_ANALOGUE_GAIN_CODE_GLOBAL_MSB;
+	tbl[0].bdata = gain_msb;
+	tbl[1].waddr = REG_ANALOGUE_GAIN_CODE_GLOBAL_LSB;
+	tbl[1].bdata = gain_lsb;
+	rc = s5k4e1gx_i2c_write_table(&tbl[0], ARRAY_SIZE(tbl)-1);
+#endif
 	if (rc < 0)
 		goto write_gain_done;
 

@@ -779,13 +779,13 @@ extern unsigned long		idle_nomwait;
  */
 static inline void wbinvd_halt(void)
 {
-        mb();
-        /* check for clflush to determine if wbinvd is legal */
-        if (cpu_has_clflush)
-                asm volatile("cli; wbinvd; 1: hlt; jmp 1b" : : : "memory");
-        else
-                while (1)
-                        halt();
+	mb();
+	/* check for clflush to determine if wbinvd is legal */
+	if (cpu_has_clflush)
+		asm volatile("cli; wbinvd; 1: hlt; jmp 1b" : : : "memory");
+	else
+		while (1)
+			halt();
 }
 
 extern void enable_sep_cpu(void);
@@ -1053,22 +1053,22 @@ unsigned long calc_aperfmperf_ratio(struct aperfmperf *old,
 }
 
 /*
-+ * AMD errata checking
-+ */
+ * AMD errata checking
+ */
 #ifdef CONFIG_CPU_SUP_AMD
 extern const int amd_erratum_400[];
 extern bool cpu_has_amd_erratum(const int *);
 
-#define AMD_LEGACY_ERRATUM(...)                { -1, __VA_ARGS__, 0 }
-#define AMD_OSVW_ERRATUM(osvw_id, ...) { osvw_id, __VA_ARGS__, 0 }
+#define AMD_LEGACY_ERRATUM(...)		{ -1, __VA_ARGS__, 0 }
+#define AMD_OSVW_ERRATUM(osvw_id, ...)	{ osvw_id, __VA_ARGS__, 0 }
 #define AMD_MODEL_RANGE(f, m_start, s_start, m_end, s_end) \
-        ((f << 24) | (m_start << 16) | (s_start << 12) | (m_end << 4) | (s_end))
-#define AMD_MODEL_RANGE_FAMILY(range)  (((range) >> 24) & 0xff)
-#define AMD_MODEL_RANGE_START(range)   (((range) >> 12) & 0xfff)
-#define AMD_MODEL_RANGE_END(range)     ((range) & 0xfff)
+	((f << 24) | (m_start << 16) | (s_start << 12) | (m_end << 4) | (s_end))
+#define AMD_MODEL_RANGE_FAMILY(range)	(((range) >> 24) & 0xff)
+#define AMD_MODEL_RANGE_START(range)	(((range) >> 12) & 0xfff)
+#define AMD_MODEL_RANGE_END(range)	((range) & 0xfff)
 
 #else
-#define cpu_has_amd_erratum(x) (false)
+#define cpu_has_amd_erratum(x)	(false)
 #endif /* CONFIG_CPU_SUP_AMD */
 
 #endif /* _ASM_X86_PROCESSOR_H */

@@ -18,17 +18,17 @@
 
 static int prom_node_to_node(const char *type, int node)
 {
-        unsigned long args[5];
- 
-        args[0] = (unsigned long) type;
-        args[1] = 1;
-        args[2] = 1;
-        args[3] = (unsigned int) node;
-        args[4] = (unsigned long) -1;
-  
-        p1275_cmd_direct(args);
- 
-        return (int) args[4];
+	unsigned long args[5];
+
+	args[0] = (unsigned long) type;
+	args[1] = 1;
+	args[2] = 1;
+	args[3] = (unsigned int) node;
+	args[4] = (unsigned long) -1;
+
+	p1275_cmd_direct(args);
+
+	return (int) args[4];
 }
 
 /* Return the child of node 'node' or zero if no this node has no
@@ -44,11 +44,11 @@ inline int prom_getchild(int node)
 	int cnode;
 
 	if (node == -1)
-                return 0;
+		return 0;
 	cnode = __prom_getchild(node);
 	if (cnode == -1)
-                return 0;
-        return cnode;
+		return 0;
+	return cnode;
 }
 EXPORT_SYMBOL(prom_getchild);
 
@@ -57,11 +57,11 @@ inline int prom_getparent(int node)
 	int cnode;
 
 	if (node == -1)
-                return 0;
-        cnode = prom_node_to_node("parent", node);
-        if (cnode == -1)
-                return 0;
-        return cnode;
+		return 0;
+	cnode = prom_node_to_node("parent", node);
+	if (cnode == -1)
+		return 0;
+	return cnode;
 }
 
 /* Return the next sibling of node 'node' or zero if no more siblings
@@ -92,20 +92,20 @@ EXPORT_SYMBOL(prom_getsibling);
 inline int prom_getproplen(int node, const char *prop)
 {
 	unsigned long args[6];
- 
-        if (!node || !prop)
-                return -1;
- 
-        args[0] = (unsigned long) "getproplen";
-        args[1] = 2;
-        args[2] = 1;
-        args[3] = (unsigned int) node;
-        args[4] = (unsigned long) prop;
-        args[5] = (unsigned long) -1;
- 
-        p1275_cmd_direct(args);
- 
-        return (int) args[5];
+
+	if (!node || !prop)
+		return -1;
+
+	args[0] = (unsigned long) "getproplen";
+	args[1] = 2;
+	args[2] = 1;
+	args[3] = (unsigned int) node;
+	args[4] = (unsigned long) prop;
+	args[5] = (unsigned long) -1;
+
+	p1275_cmd_direct(args);
+
+	return (int) args[5];
 }
 EXPORT_SYMBOL(prom_getproplen);
 
@@ -116,25 +116,25 @@ EXPORT_SYMBOL(prom_getproplen);
 inline int prom_getproperty(int node, const char *prop,
 			    char *buffer, int bufsize)
 {
-        unsigned long args[8];
+	unsigned long args[8];
 	int plen;
 
 	plen = prom_getproplen(node, prop);
 	if ((plen > bufsize) || (plen == 0) || (plen == -1))
 		return -1;
-		
+
 	args[0] = (unsigned long) prom_getprop_name;
-        args[1] = 4;
-        args[2] = 1;
-        args[3] = (unsigned int) node;
-        args[4] = (unsigned long) prop;
-        args[5] = (unsigned long) buffer;
-        args[6] = bufsize;
-        args[7] = (unsigned long) -1;
- 
-        p1275_cmd_direct(args);
- 
-        return (int) args[7];
+	args[1] = 4;
+	args[2] = 1;
+	args[3] = (unsigned int) node;
+	args[4] = (unsigned long) prop;
+	args[5] = (unsigned long) buffer;
+	args[6] = bufsize;
+	args[7] = (unsigned long) -1;
+
+	p1275_cmd_direct(args);
+
+	return (int) args[7];
 }
 EXPORT_SYMBOL(prom_getproperty);
 
@@ -162,7 +162,7 @@ int prom_getintdefault(int node, const char *property, int deflt)
 
 	retval = prom_getint(node, property);
 	if (retval == -1)
-                return deflt;
+		return deflt;
 
 	return retval;
 }
@@ -175,7 +175,7 @@ int prom_getbool(int node, const char *prop)
 
 	retval = prom_getproplen(node, prop);
 	if (retval == -1)
-                return 0;
+		return 0;
 	return 1;
 }
 EXPORT_SYMBOL(prom_getbool);
@@ -190,7 +190,7 @@ void prom_getstring(int node, const char *prop, char *user_buf, int ubuf_size)
 
 	len = prom_getproperty(node, prop, user_buf, ubuf_size);
 	if (len != -1)
-                return;
+		return;
 	user_buf[0] = 0;
 	return;
 }
@@ -204,7 +204,7 @@ int prom_nodematch(int node, const char *name)
 	char namebuf[128];
 	prom_getproperty(node, "name", namebuf, sizeof(namebuf));
 	if (strcmp(namebuf, name) == 0)
-                return 1;
+		return 1;
 	return 0;
 }
 
@@ -237,22 +237,22 @@ static const char *prom_nextprop_name = "nextprop";
  */
 inline char *prom_firstprop(int node, char *buffer)
 {
-        unsigned long args[7];
-        
+	unsigned long args[7];
+
 	*buffer = 0;
 	if (node == -1)
-                return buffer;
- 
-        args[0] = (unsigned long) prom_nextprop_name;
-        args[1] = 3;
-        args[2] = 1;
-        args[3] = (unsigned int) node;
-        args[4] = 0;
-        args[5] = (unsigned long) buffer;
-        args[6] = (unsigned long) -1;
- 
-        p1275_cmd_direct(args);
-        
+		return buffer;
+
+	args[0] = (unsigned long) prom_nextprop_name;
+	args[1] = 3;
+	args[2] = 1;
+	args[3] = (unsigned int) node;
+	args[4] = 0;
+	args[5] = (unsigned long) buffer;
+	args[6] = (unsigned long) -1;
+
+	p1275_cmd_direct(args);
+
 	return buffer;
 }
 EXPORT_SYMBOL(prom_firstprop);
@@ -263,7 +263,7 @@ EXPORT_SYMBOL(prom_firstprop);
  */
 inline char *prom_nextprop(int node, const char *oprop, char *buffer)
 {
-        unsigned long args[7];
+	unsigned long args[7];
 	char buf[32];
 
 	if (node == -1) {
@@ -274,16 +274,17 @@ inline char *prom_nextprop(int node, const char *oprop, char *buffer)
 		strcpy (buf, oprop);
 		oprop = buf;
 	}
+
 	args[0] = (unsigned long) prom_nextprop_name;
-        args[1] = 3;
-        args[2] = 1;
-        args[3] = (unsigned int) node;
-        args[4] = (unsigned long) oprop;
-        args[5] = (unsigned long) buffer;
-        args[6] = (unsigned long) -1;
- 
-        p1275_cmd_direct(args); 
-        
+	args[1] = 3;
+	args[2] = 1;
+	args[3] = (unsigned int) node;
+	args[4] = (unsigned long) oprop;
+	args[5] = (unsigned long) buffer;
+	args[6] = (unsigned long) -1;
+
+	p1275_cmd_direct(args);
+
 	return buffer;
 }
 EXPORT_SYMBOL(prom_nextprop);
@@ -291,19 +292,19 @@ EXPORT_SYMBOL(prom_nextprop);
 int
 prom_finddevice(const char *name)
 {
-        unsigned long args[5];
-        
+	unsigned long args[5];
+
 	if (!name)
 		return 0;
 	args[0] = (unsigned long) "finddevice";
-        args[1] = 1;
-        args[2] = 1;
-        args[3] = (unsigned long) name;
-        args[4] = (unsigned long) -1;
- 
-        p1275_cmd_direct(args);
- 
-        return (int) args[4];
+	args[1] = 1;
+	args[2] = 1;
+	args[3] = (unsigned long) name;
+	args[4] = (unsigned long) -1;
+
+	p1275_cmd_direct(args);
+
+	return (int) args[4];
 }
 EXPORT_SYMBOL(prom_finddevice);
 
@@ -327,8 +328,8 @@ EXPORT_SYMBOL(prom_node_has_property);
 int
 prom_setprop(int node, const char *pname, char *value, int size)
 {
-        unsigned long args[8];
-        
+	unsigned long args[8];
+
 	if (size == 0)
 		return 0;
 	if ((pname == 0) || (value == 0))
@@ -341,37 +342,37 @@ prom_setprop(int node, const char *pname, char *value, int size)
 	}
 #endif
 	args[0] = (unsigned long) "setprop";
-        args[1] = 4;
-        args[2] = 1;
-        args[3] = (unsigned int) node;
-        args[4] = (unsigned long) pname;
-        args[5] = (unsigned long) value;
-        args[6] = size;
-        args[7] = (unsigned long) -1;
- 
-        p1275_cmd_direct(args);
- 
-        return (int) args[7];
+	args[1] = 4;
+	args[2] = 1;
+	args[3] = (unsigned int) node;
+	args[4] = (unsigned long) pname;
+	args[5] = (unsigned long) value;
+	args[6] = size;
+	args[7] = (unsigned long) -1;
+
+	p1275_cmd_direct(args);
+
+	return (int) args[7];
 }
 EXPORT_SYMBOL(prom_setprop);
 
 inline int prom_inst2pkg(int inst)
 {
-        unsigned long args[5];
+	unsigned long args[5];
 	int node;
 	
 	args[0] = (unsigned long) "instance-to-package";
-        args[1] = 1;
-        args[2] = 1;
-        args[3] = (unsigned int) inst;
-        args[4] = (unsigned long) -1;
- 
-        p1275_cmd_direct(args);
- 
-        node = (int) args[4];
-        if (node == -1)
-                return 0;
- 	return node;
+	args[1] = 1;
+	args[2] = 1;
+	args[3] = (unsigned int) inst;
+	args[4] = (unsigned long) -1;
+
+	p1275_cmd_direct(args);
+
+	node = (int) args[4];
+	if (node == -1)
+		return 0;
+	return node;
 }
 
 /* Return 'node' assigned to a particular prom 'path'
@@ -384,27 +385,27 @@ prom_pathtoinode(const char *path)
 
 	inst = prom_devopen (path);
 	if (inst == 0)
-                return 0;
-        node = prom_inst2pkg(inst);
-        prom_devclose(inst);
-        if (node == -1)
-                return 0;
+		return 0;
+	node = prom_inst2pkg(inst);
+	prom_devclose(inst);
+	if (node == -1)
+		return 0;
 	return node;
 }
 
 int prom_ihandle2path(int handle, char *buffer, int bufsize)
 {
 	unsigned long args[7];
- 
-        args[0] = (unsigned long) "instance-to-path";
-        args[1] = 3;
-        args[2] = 1;
-        args[3] = (unsigned int) handle;
-        args[4] = (unsigned long) buffer;
-        args[5] = bufsize;
-        args[6] = (unsigned long) -1;
- 
-        p1275_cmd_direct(args);
- 
-        return (int) args[6];
+
+	args[0] = (unsigned long) "instance-to-path";
+	args[1] = 3;
+	args[2] = 1;
+	args[3] = (unsigned int) handle;
+	args[4] = (unsigned long) buffer;
+	args[5] = bufsize;
+	args[6] = (unsigned long) -1;
+
+	p1275_cmd_direct(args);
+
+	return (int) args[6];
 }

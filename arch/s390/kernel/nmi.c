@@ -214,9 +214,9 @@ static int notrace s390_revalidate_registers(struct mci *mci)
 #endif
 	/* Revalidate clock comparator register */
 	if (S390_lowcore.clock_comparator == -1)
-                set_clock_comparator(get_clock());
-        else
-                set_clock_comparator(S390_lowcore.clock_comparator);
+		set_clock_comparator(get_clock());
+	else
+		set_clock_comparator(S390_lowcore.clock_comparator);
 	/* Check if old PSW is valid */
 	if (!mci->wp)
 		/*

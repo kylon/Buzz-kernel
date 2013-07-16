@@ -186,7 +186,7 @@ extern int prom_getunumber(int syndrome_code,
 
 /* Retain physical memory to the caller across soft resets. */
 extern int prom_retain(const char *name, unsigned long size,
-                       unsigned long align, unsigned long *paddr);
+		       unsigned long align, unsigned long *paddr);
 
 /* Load explicit I/D TLB entries into the calling processor. */
 extern long prom_itlb_load(unsigned long index,

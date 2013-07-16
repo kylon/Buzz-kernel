@@ -285,7 +285,7 @@ void intel_init_thermal(struct cpuinfo_x86 *c)
 	 * since it might be delivered via SMI already:
 	 */
 	rdmsr(MSR_IA32_MISC_ENABLE, l, h);
-	
+
 	h = lvtthmr_init;
 	/*
 	 * The initial value of thermal LVT entries on all APs always reads
@@ -293,12 +293,13 @@ void intel_init_thermal(struct cpuinfo_x86 *c)
 	 * sequence to them and LVT registers are reset to 0s except for
 	 * the mask bits which are set to 1s when APs receive INIT IPI.
 	 * If BIOS takes over the thermal interrupt and sets its interrupt
-         * delivery mode to SMI (not fixed), it restores the value that the
-         * BIOS has programmed on AP based on BSP's info we saved since BIOS
-         * is always setting the same value for all threads/cores.
+	 * delivery mode to SMI (not fixed), it restores the value that the
+	 * BIOS has programmed on AP based on BSP's info we saved since BIOS
+	 * is always setting the same value for all threads/cores.
 	 */
 	if ((h & APIC_DM_FIXED_MASK) != APIC_DM_FIXED)
-                apic_write(APIC_LVTTHMR, lvtthmr_init);
+		apic_write(APIC_LVTTHMR, lvtthmr_init);
+
 
 	if ((l & MSR_IA32_MISC_ENABLE_TM1) && (h & APIC_DM_SMI)) {
 		printk(KERN_DEBUG

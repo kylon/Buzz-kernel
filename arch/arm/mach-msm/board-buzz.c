@@ -494,6 +494,34 @@ static int buzz_ts_atmel_power(int on)
 
 struct atmel_i2c_platform_data buzz_ts_atmel_data[] = {
 	{
+		.version = 0x020,
+		.abs_x_min = 0,
+		.abs_x_max = 1023,
+		.abs_y_min = 0,
+		.abs_y_max = 915,
+		.abs_pressure_min = 0,
+		.abs_pressure_max = 255,
+		.abs_width_min = 0,
+		.abs_width_max = 20,
+		.gpio_irq = BUZZ_GPIO_TP_ATT_N,
+		.power = buzz_ts_atmel_power,
+		.config_T6 = {0, 0, 0, 0, 0, 0},
+		.config_T7 = {50, 15, 25},
+		.config_T8 = {7, 0, 5, 2, 0, 0, 10, 15, 0, 0},
+		.config_T9 = {139, 0, 0, 16, 11, 0, 16, 40, 3, 3, 10, 10, 5, 15, 3, 10, 20, 0, 0, 0, 0, 0, 252, 252, 34, 40, 160, 50, 142, 73, 40, 8},
+		.config_T15 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T19 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T20 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T22 = {15, 0, 0, 0, 0, 0, 0, 0, 16, 0, 1, 0, 7, 18, 255, 255, 0},
+		.config_T23 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T24 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T25 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T27 = {0, 0, 0, 0, 0, 0, 0},
+		.config_T28 = {0, 0, 0, 4, 8, 30},
+		.object_crc = {0x3D, 0xBB, 0x8E},
+		.cable_config = {30, 30, 8, 16},
+	},
+	{
 		.version = 0x016,
 		.abs_x_min = 0,
 		.abs_x_max = 1023,
@@ -1162,8 +1190,6 @@ static void __init buzz_init(void)
 	 */
 	gpio_request(BUZZ_GPIO_LS_EN, "ls_en");
 	gpio_direction_output(BUZZ_GPIO_LS_EN, 0);
-
-	gpio_request(BUZZ_PS_2V85_EN, "ps_2v85_en");
 
 	msm_hw_reset_hook = buzz_reset;
 

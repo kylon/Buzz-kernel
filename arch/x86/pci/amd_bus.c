@@ -217,8 +217,8 @@ static int __init early_fill_mp_bus_info(void)
 	u64 val;
 	u32 address;
 	struct resource fam10h_mmconf_res, *fam10h_mmconf;
-        u64 fam10h_mmconf_start;
-        u64 fam10h_mmconf_end;
+	u64 fam10h_mmconf_start;
+	u64 fam10h_mmconf_end;
 
 	if (!early_pci_allowed())
 		return -1;
@@ -346,13 +346,13 @@ static int __init early_fill_mp_bus_info(void)
 	fam10h_mmconf = amd_get_mmconfig_range(&fam10h_mmconf_res);
 	/* need to take out mmconf range */
 	if (fam10h_mmconf) {
-                printk(KERN_DEBUG "Fam 10h mmconf %pR\n", fam10h_mmconf);
-                fam10h_mmconf_start = fam10h_mmconf->start;
-                fam10h_mmconf_end = fam10h_mmconf->end;
-                update_range(range, fam10h_mmconf_start, fam10h_mmconf_end);
-        } else {
-                fam10h_mmconf_start = 0;
-                fam10h_mmconf_end = 0;
+		printk(KERN_DEBUG "Fam 10h mmconf %pR\n", fam10h_mmconf);
+		fam10h_mmconf_start = fam10h_mmconf->start;
+		fam10h_mmconf_end = fam10h_mmconf->end;
+		update_range(range, fam10h_mmconf_start, fam10h_mmconf_end);
+	} else {
+		fam10h_mmconf_start = 0;
+		fam10h_mmconf_end = 0;
 	}
 
 	/* mmio resource */

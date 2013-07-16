@@ -93,6 +93,7 @@ struct flash_block_list {
 	struct flash_block_list *next;
 	struct flash_block blocks[FLASH_BLOCKS_PER_NODE];
 };
+
 static struct flash_block_list *rtas_firmware_flash_list;
 
 /* Use slab cache to guarantee 4k alignment */
@@ -197,8 +198,8 @@ static int rtas_flash_release(struct inode *inode, struct file *file)
 		/* File was opened in write mode for a new flash attempt */
 		/* Clear saved list */
 		if (rtas_firmware_flash_list) {
-                        free_flash_list(rtas_firmware_flash_list);
-                        rtas_firmware_flash_list = NULL;
+			free_flash_list(rtas_firmware_flash_list);
+			rtas_firmware_flash_list = NULL;
 		}
 
 		if (uf->status != FLASH_AUTH)  
@@ -606,14 +607,14 @@ static void rtas_flash_firmware(int reboot_type)
 	}
 
 	/*
-         * NOTE: the "first" block must be under 4GB, so we create
-         * an entry with no data blocks in the reserved buffer in
-         * the kernel data segment.
+	 * NOTE: the "first" block must be under 4GB, so we create
+	 * an entry with no data blocks in the reserved buffer in
+	 * the kernel data segment.
 	 */
 	spin_lock(&rtas_data_buf_lock);
-        flist = (struct flash_block_list *)&rtas_data_buf[0];
-        flist->num_blocks = 0;
-        flist->next = rtas_firmware_flash_list;
+	flist = (struct flash_block_list *)&rtas_data_buf[0];
+	flist->num_blocks = 0;
+	flist->next = rtas_firmware_flash_list;
 	rtas_block_list = virt_to_abs(flist);
 	if (rtas_block_list >= 4UL*1024*1024*1024) {
 		printk(KERN_ALERT "FLASH: kernel bug...flash list header addr above 4GB\n");

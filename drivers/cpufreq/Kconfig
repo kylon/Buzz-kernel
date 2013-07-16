@@ -77,23 +77,12 @@ config CPU_FREQ_DEFAULT_GOV_POWERSAVE
 	  Use the CPUFreq governor 'powersave' as default. This sets
 	  the frequency statically to the lowest frequency supported by
 	  the CPU.
-
-config CPU_FREQ_DEFAULT_GOV_SAVAGEDZEN
-	bool "savagedzen"
-	select CPU_FREQ_GOV_SAVAGEDZEN
-	help
-	  Use the CPUFreq governor 'savagedzen' as default.
+	  
 config CPU_FREQ_DEFAULT_GOV_SMARTASSH3
         bool "smartassH3"
         select CPU_FREQ_GOV_SMARTASSH3
         help
           Use the CPUFreq governor 'SmartassH3' as default. 
-
-config CPU_FREQ_DEFAULT_GOV_SMOOTHASS
-	bool "smoothass"
-	select CPU_FREQ_GOV_SMOOTHASS
-	help
-	  Use the CPUFreq governor 'smoothass' as default.
 	  
 config CPU_FREQ_DEFAULT_GOV_USERSPACE
 	bool "userspace"
@@ -164,16 +153,6 @@ config CPU_FREQ_GOV_POWERSAVE
 	  module will be called cpufreq_powersave.
 
 	  If in doubt, say Y.
-
-config CPU_FREQ_GOV_SAVAGEDZEN
-	tristate "'savagedzen' cpufreq policy governor"	
-	help	
-	  'savagedzen' - savagedzen CPU governor.
-
-config CPU_FREQ_GOV_SMOOTHASS
-	tristate "'smoothass' cpufreq policy governor"	
-	help	
-	  'smoothass' - smoothass CPU governor.
 	  
 config CPU_FREQ_GOV_USERSPACE
 	tristate "'userspace' governor for userspace frequency scaling"

@@ -768,6 +768,9 @@ BYTE    byPwr = pDevice->byCCKPwr;
     if (pDevice->dwDiagRefCount != 0) {
         return TRUE;
     }
+    
+    if (uCH == 0)
+            return -EINVAL;
 
     switch (uRATE) {
     case RATE_1M:

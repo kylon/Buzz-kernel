@@ -273,8 +273,8 @@ int audmgr_enable(struct audmgr *am, struct audmgr_config *cfg)
 	rc = msm_rpc_write(am->ept, &msg, sizeof(msg));
 	if (rc < 0)
 		return rc;
-
-	rc = wait_event_timeout(am->wait, am->state != STATE_ENABLING, 2*HZ);
+	/* 20101109: change wait time from 2*HZ to 5 *HZ */
+	rc = wait_event_timeout(am->wait, am->state != STATE_ENABLING, 5*HZ);
 	if (rc == 0) {
 	    pr_err("audmgr_enable: ARM9 did not reply to RPC am->"
 		    "state = %d\n", am->state);

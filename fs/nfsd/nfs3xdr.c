@@ -275,9 +275,9 @@ void fill_post_wcc(struct svc_fh *fhp)
 	fhp->fh_post_change = fhp->fh_dentry->d_inode->i_version;
 	if (err) {
 		fhp->fh_post_saved = 0;
-	/* Grab the ctime anyway - set_change_info might use it */
-                fhp->fh_post_attr.ctime = fhp->fh_dentry->d_inode->i_ctime;
-        } else
+		/* Grab the ctime anyway - set_change_info might use it */
+		fhp->fh_post_attr.ctime = fhp->fh_dentry->d_inode->i_ctime;
+	} else
 		fhp->fh_post_saved = 1;
 }
 

@@ -215,11 +215,11 @@ static noinline int run_ordered_completions(struct btrfs_workers *workers,
 		spin_lock(&workers->order_lock);
 		list_del(&work->order_list);
 		spin_unlock(&workers->order_lock);
- 
-                /*
-                 * we don't want to call the ordered free functions
-                 * with the lock held though
-                 */
+
+		/*
+		 * we don't want to call the ordered free functions
+		 * with the lock held though
+		 */
 		work->ordered_free(work);
 		spin_lock(&workers->order_lock);
 	}

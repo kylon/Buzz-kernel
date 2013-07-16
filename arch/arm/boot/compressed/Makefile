@@ -72,9 +72,9 @@ KBUILD_CFLAGS = $(subst -pg, , $(ORIG_CFLAGS))
 endif
 
 EXTRA_CFLAGS  := -fpic -fno-builtin
-EXTRA_AFLAGS  := -Wa,-march=all
+EXTRA_AFLAGS  := -Wa,-march=armv6
 
-# Supply ZRELADDR to the decompressor via a linker symbol.
+# Supply ZRELADDR to the decompressor via a linker symbol. 
 LDFLAGS_vmlinux := --defsym zreladdr=$(ZRELADDR)
 ifeq ($(CONFIG_CPU_ENDIAN_BE8),y)
 LDFLAGS_vmlinux += --be8

@@ -522,12 +522,12 @@ static void __init quirk_amd_nb_node(struct pci_dev *dev)
 
 	pci_read_config_dword(nb_ht, 0x60, &val);
 	node = val & 7;
-        /*
-         * Some hardware may return an invalid node ID,
-         * so check it first:
-         */
-        if (node_online(node))
-                set_dev_node(&dev->dev, node);
+	/*
+	 * Some hardware may return an invalid node ID,
+	 * so check it first:
+	 */
+	if (node_online(node))
+		set_dev_node(&dev->dev, node);
 	pci_dev_put(nb_ht);
 }
 

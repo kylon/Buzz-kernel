@@ -544,7 +544,7 @@ static void flush_devices_by_domain(struct protection_domain *domain)
 
 	for (i = 0; i <= amd_iommu_last_bdf; ++i) {
 		if ((domain == NULL && amd_iommu_pd_table[i] == NULL) ||
-		    (amd_iommu_pd_table[i] != domain))
+		    (domain != NULL && amd_iommu_pd_table[i] != domain))
 			continue;
 
 		iommu = amd_iommu_rlookup_table[i];
@@ -1688,15 +1688,15 @@ static void __unmap_single(struct amd_iommu *iommu,
 			   size_t size,
 			   int dir)
 {
-        dma_addr_t flush_addr;
+	dma_addr_t flush_addr;
 	dma_addr_t i, start;
 	unsigned int pages;
 
 	if ((dma_addr == bad_dma_address) ||
 	    (dma_addr + size > dma_dom->aperture_size))
 		return;
-        
-        flush_addr = dma_addr;
+
+	flush_addr = dma_addr;
 	pages = iommu_num_pages(dma_addr, size, PAGE_SIZE);
 	dma_addr &= PAGE_MASK;
 	start = dma_addr;
@@ -2241,9 +2241,7 @@ static void amd_iommu_domain_destroy(struct iommu_domain *dom)
 
 	free_pagetable(domain);
 
-	domain_id_free(domain->id);
-
-	kfree(domain);
+	protection_domain_free(domain);
 
 	dom->priv = NULL;
 }

@@ -42,9 +42,9 @@ static inline int cpu_is_noncoherent_r10000(struct device *dev)
 }
 
 static gfp_t massage_gfp_flags(const struct device *dev, gfp_t gfp)
-{         
-         gfp_t dma_flag;
-         
+{
+	gfp_t dma_flag;
+
 	/* ignore region specifiers */
 	gfp &= ~(__GFP_DMA | __GFP_DMA32 | __GFP_HIGHMEM);
 
@@ -55,19 +55,19 @@ static gfp_t massage_gfp_flags(const struct device *dev, gfp_t gfp)
 #endif
 #if defined(CONFIG_ZONE_DMA32) && defined(CONFIG_ZONE_DMA)
 	     if (dev->coherent_dma_mask < DMA_BIT_MASK(32))
-		dma_flag = __GFP_DMA;
-        else if (dev->coherent_dma_mask < DMA_BIT_MASK(64))
-                        dma_flag = __GFP_DMA32;
-       else
+			dma_flag = __GFP_DMA;
+	else if (dev->coherent_dma_mask < DMA_BIT_MASK(64))
+			dma_flag = __GFP_DMA32;
+	else
 #endif
 #if defined(CONFIG_ZONE_DMA32) && !defined(CONFIG_ZONE_DMA)
-             if (dev->coherent_dma_mask < DMA_BIT_MASK(64))
-                dma_flag = __GFP_DMA32;
-        else
+	     if (dev->coherent_dma_mask < DMA_BIT_MASK(64))
+		dma_flag = __GFP_DMA32;
+	else
 #endif
 #if defined(CONFIG_ZONE_DMA) && !defined(CONFIG_ZONE_DMA32)
-             if (dev->coherent_dma_mask < DMA_BIT_MASK(64))
-                dma_flag = __GFP_DMA;
+	     if (dev->coherent_dma_mask < DMA_BIT_MASK(64))
+		dma_flag = __GFP_DMA;
 	else
 #endif
 		dma_flag = 0;

@@ -595,7 +595,7 @@ void __init uv_system_init(void)
 			if (!test_bit(j, &present))
 				continue;
 			pnode = (i * 64 + j);
-                        uv_blade_info[blade].pnode = pnode;
+			uv_blade_info[blade].pnode = pnode;
 			uv_blade_info[blade].nr_possible_cpus = 0;
 			uv_blade_info[blade].nr_online_cpus = 0;
 			max_pnode = max(pnode, max_pnode);

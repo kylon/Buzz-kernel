@@ -295,10 +295,12 @@ int cifs_open(struct inode *inode, struct file *file)
 	    (CIFS_UNIX_POSIX_PATH_OPS_CAP &
 			le64_to_cpu(tcon->fsUnixInfo.Capability))) {
 		int oflags = (int) cifs_posix_convert_flags(file->f_flags);
+		oflags |= SMB_O_CREAT;
 		/* can not refresh inode info since size could be stale */
 		rc = cifs_posix_open(full_path, &inode, file->f_path.mnt,
-				     cifs_sb->mnt_file_mode /* ignored */,
-				     oflags, &oplock, &netfid, xid);
+				inode->i_sb,
+				cifs_sb->mnt_file_mode /* ignored */,
+				oflags, &oplock, &netfid, xid);
 		if (rc == 0) {
 			cFYI(1, ("posix open succeeded"));
 			/* no need for special case handling of setting mode
@@ -510,8 +512,9 @@ reopen_error_exit:
 		int oflags = (int) cifs_posix_convert_flags(file->f_flags);
 		/* can not refresh inode info since size could be stale */
 		rc = cifs_posix_open(full_path, NULL, file->f_path.mnt,
-				     cifs_sb->mnt_file_mode /* ignored */,
-				     oflags, &oplock, &netfid, xid);
+				inode->i_sb,
+				cifs_sb->mnt_file_mode /* ignored */,
+				oflags, &oplock, &netfid, xid);
 		if (rc == 0) {
 			cFYI(1, ("posix reopen succeeded"));
 			goto reopen_success;
@@ -870,8 +873,8 @@ int cifs_lock(struct file *file, int cmd, struct file_lock *pfLock)
 
 		if (numLock) {
 			rc = CIFSSMBLock(xid, tcon, netfid, length,
-					pfLock->fl_start, 0, numLock, lockType,
-                                         wait_flag, 0);
+					 pfLock->fl_start, 0, numLock, lockType,
+					 wait_flag, 0);
 
 			if (rc == 0) {
 				/* For Windows locks we must store them. */
@@ -892,8 +895,8 @@ int cifs_lock(struct file *file, int cmd, struct file_lock *pfLock)
 						(li->offset + li->length)) {
 					stored_rc = CIFSSMBLock(xid, tcon,
 							netfid, li->length,
-                                                        li->offset, 1, 0,
-                                                        li->type, false, 0);
+							li->offset, 1, 0,
+							li->type, false, 0);
 					if (stored_rc)
 						rc = stored_rc;
 
@@ -2312,7 +2315,7 @@ cifs_oplock_break(struct slow_work *work)
 	if (!cfile->closePend && !cfile->oplock_break_cancelled) {
 		rc = CIFSSMBLock(0, cifs_sb->tcon, cfile->netfid, 0, 0, 0, 0,
 				 LOCKING_ANDX_OPLOCK_RELEASE, false,
-                                 cinode->clientCanCacheRead ? 1 : 0);
+				 cinode->clientCanCacheRead ? 1 : 0);
 		cFYI(1, ("Oplock release rc = %d", rc));
 	}
 }

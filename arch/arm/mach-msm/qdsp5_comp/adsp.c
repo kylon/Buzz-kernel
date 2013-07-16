@@ -745,8 +745,10 @@ static void handle_adsp_rtos_mtoa_app(struct rpc_request_hdr *req)
 done:
 	mutex_unlock(&module->lock);
 	event_addr = (uint32_t *)req;
-	module->ops->event(module->driver_data, EVENT_MSG_ID,
+	if (module->ops) {
+		module->ops->event(module->driver_data, EVENT_MSG_ID,
 				EVENT_LEN, read_event);
+	}
 }
 
 static int handle_adsp_rtos_mtoa(struct rpc_request_hdr *req)

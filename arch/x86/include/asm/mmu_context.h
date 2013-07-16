@@ -44,9 +44,9 @@ static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
 
 		/* Re-load page tables */
 		load_cr3(next->pgd);
-		
+
 		/* stop flush ipis for the previous mm */
-                cpumask_clear_cpu(cpu, mm_cpumask(prev));
+		cpumask_clear_cpu(cpu, mm_cpumask(prev));
 
 		/*
 		 * load the LDT, if the LDT is different:

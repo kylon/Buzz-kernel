@@ -153,6 +153,7 @@ static void handle_modem_crash(void)
 {
 	pr_err("ARM9 has CRASHED\n");
 	smd_diag();
+	show_state_filter(TASK_UNINTERRUPTIBLE);
 	msm_pm_flush_console();
 
 	/* hard reboot if possible */
