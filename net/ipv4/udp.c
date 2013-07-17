@@ -665,17 +665,17 @@ int udp_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 		connected = 0;
 	}
 	if (!ipc.opt) {
-                struct ip_options_rcu *inet_opt;
- 
-                rcu_read_lock();
-                inet_opt = rcu_dereference(inet->inet_opt);
-                if (inet_opt) {
-                        memcpy(&opt_copy, inet_opt,
-                               sizeof(*inet_opt) + inet_opt->opt.optlen);
-                        ipc.opt = &opt_copy.opt;
-                }
-                rcu_read_unlock();
-        }
+		struct ip_options_rcu *inet_opt;
+
+		rcu_read_lock();
+		inet_opt = rcu_dereference(inet->inet_opt);
+		if (inet_opt) {
+			memcpy(&opt_copy, inet_opt,
+			       sizeof(*inet_opt) + inet_opt->opt.optlen);
+			ipc.opt = &opt_copy.opt;
+		}
+		rcu_read_unlock();
+	}
 
 	saddr = ipc.addr;
 	ipc.addr = faddr = daddr;
@@ -1022,9 +1022,9 @@ csum_copy_err:
 
 	if (noblock)
 		return -EAGAIN;
-	
+
 	/* starting over for a new packet */
-        msg->msg_flags &= ~MSG_TRUNC;
+	msg->msg_flags &= ~MSG_TRUNC;
 	goto try_again;
 }
 
@@ -1847,7 +1847,7 @@ void __init udp_init(void)
 	/* Set the pressure threshold up by the same strategy of TCP. It is a
 	 * fraction of global memory that is up to 1/2 at 256 MB, decreasing
 	 * toward zero with the amount of memory, with a floor of 128 pages,
-         * and a ceiling that prevents an integer overflow.
+	 * and a ceiling that prevents an integer overflow.
 	 */
 	nr_pages = totalram_pages - totalhigh_pages;
 	limit = min(nr_pages, 1UL<<(28-PAGE_SHIFT)) >> (20-PAGE_SHIFT);

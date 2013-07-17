@@ -610,27 +610,27 @@ static u32 ipv6_fragmentation_id[FID_HASH_SZ];
 
 void __init initialize_hashidentrnd(void)
 {
-     get_random_bytes(&hashidentrnd, sizeof(hashidentrnd));
+	get_random_bytes(&hashidentrnd, sizeof(hashidentrnd));
 }
 
 static u32 __ipv6_select_ident(const struct in6_addr *addr)
 {
-       u32 newid, oldid, hash = jhash2((u32 *)addr, 4, hashidentrnd);
-       u32 *pid = &ipv6_fragmentation_id[hash % FID_HASH_SZ];
+	u32 newid, oldid, hash = jhash2((u32 *)addr, 4, hashidentrnd);
+	u32 *pid = &ipv6_fragmentation_id[hash % FID_HASH_SZ];
 
-       do {
-               oldid = *pid;
-               newid = oldid + 1;
-               if (!(hash + newid))
-                       newid++;
-          } while (cmpxchg(pid, oldid, newid) != oldid);
- 
-          return hash + newid;
+	do {
+		oldid = *pid;
+		newid = oldid + 1;
+		if (!(hash + newid))
+			newid++;
+	} while (cmpxchg(pid, oldid, newid) != oldid);
+
+	return hash + newid;
 }
 
 void ipv6_select_ident(struct frag_hdr *fhdr, struct rt6_info *rt)
 {
-        fhdr->identification = htonl(__ipv6_select_ident(&rt->rt6i_dst.addr));
+	fhdr->identification = htonl(__ipv6_select_ident(&rt->rt6i_dst.addr));
 }
 
 static int ip6_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
@@ -684,11 +684,11 @@ static int ip6_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
 			if (frag->len > mtu ||
 			    ((frag->len & 7) && frag->next) ||
 			    skb_headroom(frag) < hlen)
-			         goto slow_path_clean;
+				goto slow_path_clean;
 
 			/* Partially cloned skb? */
 			if (skb_shared(frag))
-				 goto slow_path_clean;
+				goto slow_path_clean;
 
 			BUG_ON(frag->sk);
 			if (skb->sk) {
@@ -788,15 +788,15 @@ static int ip6_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
 			      IPSTATS_MIB_FRAGFAILS);
 		dst_release(&rt->u.dst);
 		return err;
-	
+
 slow_path_clean:
-               skb_walk_frags(skb, frag2) {
-                       if (frag2 == frag)
-                               break;
-                       frag2->sk = NULL;
-                       frag2->destructor = NULL;
-                       skb->truesize += frag2->truesize;
-               }
+		skb_walk_frags(skb, frag2) {
+			if (frag2 == frag)
+				break;
+			frag2->sk = NULL;
+			frag2->destructor = NULL;
+			skb->truesize += frag2->truesize;
+		}
 	}
 
 slow_path:
@@ -1069,7 +1069,7 @@ static inline int ip6_ufo_append_data(struct sock *sk,
 			int odd, struct sk_buff *skb),
 			void *from, int length, int hh_len, int fragheaderlen,
 			int transhdrlen, int mtu,unsigned int flags,
-                        struct rt6_info *rt)
+			struct rt6_info *rt)
 
 {
 	struct sk_buff *skb;

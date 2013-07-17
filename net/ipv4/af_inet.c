@@ -116,19 +116,6 @@
 #include <linux/mroute.h>
 #endif
 
-#ifdef CONFIG_ANDROID_PARANOID_NETWORK
-#include <linux/android_aid.h>
-
-static inline int current_has_network(void)
-{
-	return in_egroup_p(AID_INET) || capable(CAP_NET_RAW);
-}
-#else
-static inline int current_has_network(void)
-{
-	return 1;
-}
-#endif
 
 /* The inetsw table contains everything that inet_create needs to
  * build a new socket.
@@ -271,7 +258,6 @@ static inline int inet_netns_ok(struct net *net, int protocol)
 	return ipprot->netns_ok;
 }
 
-
 /*
  *	Create an inet socket.
  */
@@ -286,9 +272,6 @@ static int inet_create(struct net *net, struct socket *sock, int protocol)
 	char answer_no_check;
 	int try_loading_module = 0;
 	int err;
-
-	if (!current_has_network())
-		return -EACCES;
 
 	if (unlikely(!inet_ehash_secret))
 		if (sock->type != SOCK_RAW && sock->type != SOCK_DGRAM)
@@ -476,9 +459,9 @@ int inet_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 	err = -EINVAL;
 	if (addr_len < sizeof(struct sockaddr_in))
 		goto out;
-        
-        if (addr->sin_family != AF_INET)
-                goto out;
+
+	if (addr->sin_family != AF_INET)
+		goto out;
 
 	chk_addr_ret = inet_addr_type(sock_net(sk), addr->sin_addr.s_addr);
 
@@ -856,7 +839,6 @@ int inet_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
 	case SIOCSIFPFLAGS:
 	case SIOCGIFPFLAGS:
 	case SIOCSIFFLAGS:
-	case SIOCKILLADDR:
 		err = devinet_ioctl(net, cmd, (void __user *)arg);
 		break;
 	default:
@@ -1086,8 +1068,8 @@ static int inet_sk_reselect_saddr(struct sock *sk)
 	struct ip_options_rcu *inet_opt;
 
 	inet_opt = inet->inet_opt;
-        if (inet_opt && inet_opt->opt.srr)
-                daddr = inet_opt->opt.faddr;
+	if (inet_opt && inet_opt->opt.srr)
+		daddr = inet_opt->opt.faddr;
 
 	/* Query new route. */
 	err = ip_route_connect(&rt, daddr, 0,
@@ -1138,11 +1120,11 @@ int inet_sk_rebuild_header(struct sock *sk)
 
 	/* Reroute. */
 	rcu_read_lock();
-        inet_opt = rcu_dereference(inet->inet_opt);
+	inet_opt = rcu_dereference(inet->inet_opt);
 	daddr = inet->daddr;
 	if (inet_opt && inet_opt->opt.srr)
-                daddr = inet_opt->opt.faddr;
-        rcu_read_unlock();
+		daddr = inet_opt->opt.faddr;
+	rcu_read_unlock();
 {
 	struct flowi fl = {
 		.oif = sk->sk_bound_dev_if,

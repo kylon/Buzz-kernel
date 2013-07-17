@@ -1668,12 +1668,12 @@ static int __init ipgre_init(void)
 	err = register_pernet_gen_device(&ipgre_net_id, &ipgre_net_ops);
 	if (err < 0)
 		return err;
- 
-        err = inet_add_protocol(&ipgre_protocol, IPPROTO_GRE);
-        if (err < 0) {
-                printk(KERN_INFO "ipgre init: can't add protocol\n");
-                goto add_proto_failed;
-        }
+
+	err = inet_add_protocol(&ipgre_protocol, IPPROTO_GRE);
+	if (err < 0) {
+		printk(KERN_INFO "ipgre init: can't add protocol\n");
+		goto add_proto_failed;
+	}
 
 	err = rtnl_link_register(&ipgre_link_ops);
 	if (err < 0)
@@ -1691,7 +1691,7 @@ tap_ops_failed:
 rtnl_link_failed:
 	inet_del_protocol(&ipgre_protocol, IPPROTO_GRE);
 add_proto_failed:
-        unregister_pernet_gen_device(ipgre_net_id, &ipgre_net_ops);
+	unregister_pernet_gen_device(ipgre_net_id, &ipgre_net_ops);
 	goto out;
 }
 

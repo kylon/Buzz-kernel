@@ -162,7 +162,7 @@ int tcp_v4_connect(struct sock *sk, struct sockaddr *uaddr, int addr_len)
 
 	nexthop = daddr = usin->sin_addr.s_addr;
 	inet_opt = inet->inet_opt;
-        if (inet_opt && inet_opt->opt.srr) {
+	if (inet_opt && inet_opt->opt.srr) {
 		if (!daddr)
 			return -EINVAL;
 		nexthop = inet_opt->opt.faddr;
@@ -218,7 +218,7 @@ int tcp_v4_connect(struct sock *sk, struct sockaddr *uaddr, int addr_len)
 
 	inet_csk(sk)->icsk_ext_hdr_len = 0;
 	if (inet_opt)
-                inet_csk(sk)->icsk_ext_hdr_len = inet_opt->opt.optlen;
+		inet_csk(sk)->icsk_ext_hdr_len = inet_opt->opt.optlen;
 
 	tp->rx_opt.mss_clamp = 536;
 
@@ -407,9 +407,9 @@ void tcp_v4_err(struct sk_buff *icmp_skb, u32 info)
 		if (seq != tp->snd_una  || !icsk->icsk_retransmits ||
 		    !icsk->icsk_backoff)
 			break;
-		
+
 		if (sock_owned_by_user(sk))
-                        break;
+			break;
 
 		icsk->icsk_backoff--;
 		inet_csk(sk)->icsk_rto = __tcp_set_rto(tp) <<
@@ -805,14 +805,14 @@ static void syn_flood_warning(struct sk_buff *skb)
  * Save and compile IPv4 options into the request_sock if needed.
  */
 static struct ip_options_rcu *tcp_v4_save_options(struct sock *sk,
-                                                 struct sk_buff *skb)
+						  struct sk_buff *skb)
 {
 	const struct ip_options *opt = &(IPCB(skb)->opt);
-        struct ip_options_rcu *dopt = NULL;
+	struct ip_options_rcu *dopt = NULL;
 
 	if (opt && opt->optlen) {
 		int opt_size = sizeof(*dopt) + opt->optlen;
-		
+
 		dopt = kmalloc(opt_size, GFP_ATOMIC);
 		if (dopt) {
 			if (ip_options_echo(&dopt->opt, skb)) {
@@ -1365,7 +1365,7 @@ struct sock *tcp_v4_syn_recv_sock(struct sock *sk, struct sk_buff *skb,
 #ifdef CONFIG_TCP_MD5SIG
 	struct tcp_md5sig_key *key;
 #endif
-        struct ip_options_rcu *inet_opt;
+	struct ip_options_rcu *inet_opt;
 
 	if (sk_acceptq_is_full(sk))
 		goto exit_overflow;
@@ -1386,14 +1386,14 @@ struct sock *tcp_v4_syn_recv_sock(struct sock *sk, struct sk_buff *skb,
 	newinet->daddr	      = ireq->rmt_addr;
 	newinet->rcv_saddr    = ireq->loc_addr;
 	newinet->saddr	      = ireq->loc_addr;
-	inet_opt = ireq->opt;
-        rcu_assign_pointer(newinet->inet_opt, inet_opt);
+	inet_opt	      = ireq->opt;
+	rcu_assign_pointer(newinet->inet_opt, inet_opt);
 	ireq->opt	      = NULL;
 	newinet->mc_index     = inet_iif(skb);
 	newinet->mc_ttl	      = ip_hdr(skb)->ttl;
 	inet_csk(newsk)->icsk_ext_hdr_len = 0;
 	if (inet_opt)
-                inet_csk(newsk)->icsk_ext_hdr_len = inet_opt->opt.optlen;
+		inet_csk(newsk)->icsk_ext_hdr_len = inet_opt->opt.optlen;
 	newinet->id = newtp->write_seq ^ jiffies;
 
 	tcp_mtup_init(newsk);
@@ -1887,49 +1887,6 @@ void tcp_v4_destroy_sock(struct sock *sk)
 }
 
 EXPORT_SYMBOL(tcp_v4_destroy_sock);
-
-/*
- * tcp_v4_nuke_addr - destroy all sockets on the given local address
- */
-void tcp_v4_nuke_addr(__u32 saddr)
-{
-	unsigned int bucket;
-
-	for (bucket = 0; bucket < tcp_hashinfo.ehash_size; bucket++) {
-		struct hlist_nulls_node *node;
-		struct sock *sk;
-		spinlock_t *lock = inet_ehash_lockp(&tcp_hashinfo, bucket);
-
-restart:
-		spin_lock_bh(lock);
-		sk_nulls_for_each(sk, node, &tcp_hashinfo.ehash[bucket].chain) {
-			struct inet_sock *inet = inet_sk(sk);
-
-			if (inet->rcv_saddr != saddr)
-				continue;
-			if (sysctl_ip_dynaddr && sk->sk_state == TCP_SYN_SENT)
-				continue;
-			if (sock_flag(sk, SOCK_DEAD))
-				continue;
-
-			sock_hold(sk);
-			spin_unlock_bh(lock);
-
-			local_bh_disable();
-			bh_lock_sock(sk);
-			sk->sk_err = ETIMEDOUT;
-			sk->sk_error_report(sk);
-
-			tcp_done(sk);
-			bh_unlock_sock(sk);
-			local_bh_enable();
-			sock_put(sk);
-
-			goto restart;
-		}
-		spin_unlock_bh(lock);
-	}
-}
 
 #ifdef CONFIG_PROC_FS
 /* Proc filesystem TCP sock list dumping. */
@@ -2540,3 +2497,4 @@ EXPORT_SYMBOL(tcp_proc_register);
 EXPORT_SYMBOL(tcp_proc_unregister);
 #endif
 EXPORT_SYMBOL(sysctl_tcp_low_latency);
+

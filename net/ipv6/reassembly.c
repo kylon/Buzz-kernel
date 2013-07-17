@@ -339,21 +339,21 @@ static int ip6_frag_queue(struct frag_queue *fq, struct sk_buff *skb,
 	}
 
 	/* RFC5722, Section 4:
-         * When reassembling an IPv6 datagram, if
-         * one or more its constituent fragments is determined to be an
-         * overlapping fragment, the entire datagram (and any constituent
-         * fragments, including those not yet received) MUST be silently
-         * discarded.
+	 *                                  When reassembling an IPv6 datagram, if
+	 *   one or more its constituent fragments is determined to be an
+	 *   overlapping fragment, the entire datagram (and any constituent
+	 *   fragments, including those not yet received) MUST be silently
+	 *   discarded.
 	 */
-	 
+
 	/* Check for overlap with preceding fragment. */
-        if (prev &&
-            (FRAG6_CB(prev)->offset + prev->len) - offset > 0)
-                goto discard_fq;
+	if (prev &&
+	    (FRAG6_CB(prev)->offset + prev->len) - offset > 0)
+		goto discard_fq;
 
 	/* Look for overlap with succeeding segment. */
-        if (next && FRAG6_CB(next)->offset < end)
-                goto discard_fq;
+	if (next && FRAG6_CB(next)->offset < end)
+		goto discard_fq;
 
 	FRAG6_CB(skb)->offset = offset;
 
@@ -391,7 +391,7 @@ static int ip6_frag_queue(struct frag_queue *fq, struct sk_buff *skb,
 	return -1;
 
 discard_fq:
-        fq_kill(fq);
+	fq_kill(fq);
 err:
 	IP6_INC_STATS(net, ip6_dst_idev(skb_dst(skb)),
 		      IPSTATS_MIB_REASMFAILS);

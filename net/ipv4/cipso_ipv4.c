@@ -1727,9 +1727,9 @@ int cipso_v4_validate(const struct sk_buff *skb, unsigned char **option)
 			/* This is a non-standard tag that we only allow for
 			 * local connections, so if the incoming interface is
 			 * not the loopback device drop the packet. Further,
-                         * there is no legitimate reason for setting this from
-                         * userspace so reject it if skb is NULL. */
-                        if (skb == NULL || !(skb->dev->flags & IFF_LOOPBACK)) {
+			 * there is no legitimate reason for setting this from
+			 * userspace so reject it if skb is NULL. */
+			if (skb == NULL || !(skb->dev->flags & IFF_LOOPBACK)) {
 				err_offset = opt_iter;
 				goto validate_return_locked;
 			}
@@ -1862,7 +1862,7 @@ static int cipso_v4_genopt(unsigned char *buf, u32 buf_len,
 
 static void opt_kfree_rcu(struct rcu_head *head)
 {
-       kfree(container_of(head, struct ip_options_rcu, rcu));
+	kfree(container_of(head, struct ip_options_rcu, rcu));
 }
 
 /**
@@ -1924,24 +1924,24 @@ int cipso_v4_sock_setattr(struct sock *sk,
 		goto socket_setattr_failure;
 	}
 	memcpy(opt->opt.__data, buf, buf_len);
-        opt->opt.optlen = opt_len;
-        opt->opt.cipso = sizeof(struct iphdr);
+	opt->opt.optlen = opt_len;
+	opt->opt.cipso = sizeof(struct iphdr);
 	kfree(buf);
 	buf = NULL;
 
 	sk_inet = inet_sk(sk);
-	
+
 	old = sk_inet->inet_opt;
 	if (sk_inet->is_icsk) {
 		sk_conn = inet_csk(sk);
 		if (old)
-                        sk_conn->icsk_ext_hdr_len -= old->opt.optlen;
-                sk_conn->icsk_ext_hdr_len += opt->opt.optlen;
+			sk_conn->icsk_ext_hdr_len -= old->opt.optlen;
+		sk_conn->icsk_ext_hdr_len += opt->opt.optlen;
 		sk_conn->icsk_sync_mss(sk, sk_conn->icsk_pmtu_cookie);
 	}
 	rcu_assign_pointer(sk_inet->inet_opt, opt);
-        if (old)
-                call_rcu(&old->rcu, opt_kfree_rcu);
+	if (old)
+		call_rcu(&old->rcu, opt_kfree_rcu);
 
 	return 0;
 
@@ -2000,15 +2000,15 @@ int cipso_v4_req_setattr(struct request_sock *req,
 		goto req_setattr_failure;
 	}
 	memcpy(opt->opt.__data, buf, buf_len);
-        opt->opt.optlen = opt_len;
-        opt->opt.cipso = sizeof(struct iphdr);
+	opt->opt.optlen = opt_len;
+	opt->opt.cipso = sizeof(struct iphdr);
 	kfree(buf);
 	buf = NULL;
 
 	req_inet = inet_rsk(req);
 	opt = xchg(&req_inet->opt, opt);
 	if (opt)
-                call_rcu(&opt->rcu, opt_kfree_rcu);
+		call_rcu(&opt->rcu, opt_kfree_rcu);
 
 	return 0;
 
@@ -2041,18 +2041,18 @@ int cipso_v4_delopt(struct ip_options_rcu **opt_ptr)
 		int optlen_new;
 
 		cipso_off = opt->opt.cipso - sizeof(struct iphdr);
-                cipso_ptr = &opt->opt.__data[cipso_off];
+		cipso_ptr = &opt->opt.__data[cipso_off];
 		cipso_len = cipso_ptr[1];
 
 		if (opt->opt.srr > opt->opt.cipso)
-                        opt->opt.srr -= cipso_len;
-                if (opt->opt.rr > opt->opt.cipso)
-                        opt->opt.rr -= cipso_len;
-                if (opt->opt.ts > opt->opt.cipso)
-                        opt->opt.ts -= cipso_len;
-                if (opt->opt.router_alert > opt->opt.cipso)
-                        opt->opt.router_alert -= cipso_len;
-                opt->opt.cipso = 0;
+			opt->opt.srr -= cipso_len;
+		if (opt->opt.rr > opt->opt.cipso)
+			opt->opt.rr -= cipso_len;
+		if (opt->opt.ts > opt->opt.cipso)
+			opt->opt.ts -= cipso_len;
+		if (opt->opt.router_alert > opt->opt.cipso)
+			opt->opt.router_alert -= cipso_len;
+		opt->opt.cipso = 0;
 
 		memmove(cipso_ptr, cipso_ptr + cipso_len,
 			opt->opt.optlen - cipso_off - cipso_len);
@@ -2065,20 +2065,20 @@ int cipso_v4_delopt(struct ip_options_rcu **opt_ptr)
 		iter = 0;
 		optlen_new = 0;
 		while (iter < opt->opt.optlen)
-                        if (opt->opt.__data[iter] != IPOPT_NOP) {
-                                iter += opt->opt.__data[iter + 1];
+			if (opt->opt.__data[iter] != IPOPT_NOP) {
+				iter += opt->opt.__data[iter + 1];
 				optlen_new = iter;
 			} else
 				iter++;
 		hdr_delta = opt->opt.optlen;
-                opt->opt.optlen = (optlen_new + 3) & ~3;
-                hdr_delta -= opt->opt.optlen;
+		opt->opt.optlen = (optlen_new + 3) & ~3;
+		hdr_delta -= opt->opt.optlen;
 	} else {
 		/* only the cipso option was present on the socket so we can
 		 * remove the entire option struct */
 		*opt_ptr = NULL;
 		hdr_delta = opt->opt.optlen;
-                call_rcu(&opt->rcu, opt_kfree_rcu);
+		call_rcu(&opt->rcu, opt_kfree_rcu);
 	}
 
 	return hdr_delta;
@@ -2100,7 +2100,7 @@ void cipso_v4_sock_delattr(struct sock *sk)
 
 	sk_inet = inet_sk(sk);
 	opt = sk_inet->inet_opt;
-        if (opt == NULL || opt->opt.cipso == 0)
+	if (opt == NULL || opt->opt.cipso == 0)
 		return;
 
 	hdr_delta = cipso_v4_delopt(&sk_inet->inet_opt);
@@ -2197,17 +2197,17 @@ getattr_return:
 int cipso_v4_sock_getattr(struct sock *sk, struct netlbl_lsm_secattr *secattr)
 {
 	struct ip_options_rcu *opt;
-        int res = -ENOMSG;
+	int res = -ENOMSG;
 
 	rcu_read_lock();
-        opt = rcu_dereference(inet_sk(sk)->inet_opt);
-        if (opt && opt->opt.cipso)
-                res = cipso_v4_getattr(opt->opt.__data +
-                                                opt->opt.cipso -
-                                                sizeof(struct iphdr),
-                                       secattr);
-                rcu_read_unlock();
-                return res;
+	opt = rcu_dereference(inet_sk(sk)->inet_opt);
+	if (opt && opt->opt.cipso)
+		res = cipso_v4_getattr(opt->opt.__data +
+						opt->opt.cipso -
+						sizeof(struct iphdr),
+				       secattr);
+	rcu_read_unlock();
+	return res;
 }
 
 /**

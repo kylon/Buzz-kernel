@@ -450,15 +450,15 @@ unsigned int tcp_poll(struct file *file, struct socket *sock, poll_table *wait)
 					mask |= POLLOUT | POLLWRNORM;
 			}
 		} else
-                        mask |= POLLOUT | POLLWRNORM;
+			mask |= POLLOUT | POLLWRNORM;
 
 		if (tp->urg_data & TCP_URG_VALID)
 			mask |= POLLPRI;
 	}
 	/* This barrier is coupled with smp_wmb() in tcp_reset() */
-        smp_rmb();
-        if (sk->sk_err)
-                mask |= POLLERR;
+	smp_rmb();
+	if (sk->sk_err)
+		mask |= POLLERR;
 
 	return mask;
 }
@@ -2930,16 +2930,17 @@ void __init tcp_init(void)
 		INIT_HLIST_HEAD(&tcp_hashinfo.bhash[i].chain);
 	}
 
+
 	cnt = tcp_hashinfo.ehash_size;
- 
-        tcp_death_row.sysctl_max_tw_buckets = cnt / 2;
-        sysctl_tcp_max_orphans = cnt / 2;
-        sysctl_max_syn_backlog = max(128, cnt / 256);
+
+	tcp_death_row.sysctl_max_tw_buckets = cnt / 2;
+	sysctl_tcp_max_orphans = cnt / 2;
+	sysctl_max_syn_backlog = max(128, cnt / 256);
 
 	/* Set the pressure threshold to be a fraction of global memory that
 	 * is up to 1/2 at 256 MB, decreasing toward zero with the amount of
 	 * memory, with a floor of 128 pages, and a ceiling that prevents an
-         * integer overflow.
+	 * integer overflow.
 	 */
 	nr_pages = totalram_pages - totalhigh_pages;
 	limit = min(nr_pages, 1UL<<(28-PAGE_SHIFT)) >> (20-PAGE_SHIFT);

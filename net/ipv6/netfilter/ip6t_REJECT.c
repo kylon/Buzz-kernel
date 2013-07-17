@@ -43,8 +43,8 @@ static void send_reset(struct net *net, struct sk_buff *oldskb)
 	int tcphoff, needs_ack;
 	const struct ipv6hdr *oip6h = ipv6_hdr(oldskb);
 	struct ipv6hdr *ip6h;
-#define DEFAULT_TOS_VALUE      0x0U
-        const __u8 tclass = DEFAULT_TOS_VALUE;
+#define DEFAULT_TOS_VALUE	0x0U
+	const __u8 tclass = DEFAULT_TOS_VALUE;
 	struct dst_entry *dst = NULL;
 	u8 proto;
 	struct flowi fl;
@@ -97,9 +97,11 @@ static void send_reset(struct net *net, struct sk_buff *oldskb)
 	fl.fl_ip_dport = otcph.source;
 	security_skb_classify_flow(oldskb, &fl);
 	dst = ip6_route_output(net, NULL, &fl);
-	if (dst == NULL)
+	if (dst == NULL || dst->error) {
+		dst_release(dst);
 		return;
-	if (dst->error || xfrm_lookup(net, &dst, &fl, NULL, 0))
+	}
+	if (xfrm_lookup(net, &dst, &fl, NULL, 0))
 		return;
 
 	hh_len = (dst->dev->hard_header_len + 15)&~15;

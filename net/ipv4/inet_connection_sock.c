@@ -360,7 +360,7 @@ struct dst_entry *inet_csk_route_req(struct sock *sk,
 	struct flowi fl = { .oif = sk->sk_bound_dev_if,
 			    .nl_u = { .ip4_u =
 				      { .daddr = ((opt && opt->opt.srr) ?
-                                                  opt->opt.faddr :
+						  opt->opt.faddr :
 						  ireq->rmt_addr),
 					.saddr = ireq->loc_addr,
 					.tos = RT_CONN_FLAGS(sk) } },

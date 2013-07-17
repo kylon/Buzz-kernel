@@ -161,8 +161,8 @@ int ip_build_and_send_pkt(struct sk_buff *skb, struct sock *sk,
 	ip_select_ident(iph, &rt->u.dst, sk);
 
 	if (opt && opt->opt.optlen) {
-                iph->ihl += opt->opt.optlen>>2;
-                ip_options_build(skb, &opt->opt, daddr, rt, 0);
+		iph->ihl += opt->opt.optlen>>2;
+		ip_options_build(skb, &opt->opt, daddr, rt, 0);
 	}
 
 	skb->priority = sk->sk_priority;
@@ -327,14 +327,14 @@ int ip_queue_xmit(struct sk_buff *skb, int ipfragok)
 	/* Make sure we can route this packet. */
 	rt = (struct rtable *)__sk_dst_check(sk, 0);
 	rcu_read_lock();
-        inet_opt = rcu_dereference(inet->inet_opt);
+	inet_opt = rcu_dereference(inet->inet_opt);
 	if (rt == NULL) {
 		__be32 daddr;
 
 		/* Use correct destination address if we have options. */
 		daddr = inet->daddr;
 		if (inet_opt && inet_opt->opt.srr)
-                        daddr = inet_opt->opt.faddr;
+			daddr = inet_opt->opt.faddr;
 
 		{
 			struct flowi fl = { .oif = sk->sk_bound_dev_if,
@@ -381,8 +381,8 @@ packet_routed:
 	/* Transport layer set skb->h.foo itself. */
 
 	if (inet_opt && inet_opt->opt.optlen) {
-                iph->ihl += inet_opt->opt.optlen >> 2;
-                ip_options_build(skb, &inet_opt->opt, inet->daddr, rt, 0);
+		iph->ihl += inet_opt->opt.optlen >> 2;
+		ip_options_build(skb, &inet_opt->opt, inet->daddr, rt, 0);
 	}
 
 	ip_select_ident_more(iph, &rt->u.dst, sk,
@@ -390,13 +390,12 @@ packet_routed:
 
 	skb->priority = sk->sk_priority;
 	skb->mark = sk->sk_mark;
-
 	res = ip_local_out(skb);
-        rcu_read_unlock();
-        return res;
+	rcu_read_unlock();
+	return res;
 
 no_route:
-        rcu_read_unlock();
+	rcu_read_unlock();
 	IP_INC_STATS(sock_net(sk), IPSTATS_MIB_OUTNOROUTES);
 	kfree_skb(skb);
 	return -EHOSTUNREACH;
@@ -496,11 +495,11 @@ int ip_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
 			if (frag->len > mtu ||
 			    ((frag->len & 7) && frag->next) ||
 			    skb_headroom(frag) < hlen)
-			         goto slow_path_clean;
+				goto slow_path_clean;
 
 			/* Partially cloned skb? */
 			if (skb_shared(frag))
-				 goto slow_path_clean;
+				goto slow_path_clean;
 
 			BUG_ON(frag->sk);
 			if (skb->sk) {
@@ -568,14 +567,15 @@ int ip_fragment(struct sk_buff *skb, int (*output)(struct sk_buff *))
 		}
 		IP_INC_STATS(dev_net(dev), IPSTATS_MIB_FRAGFAILS);
 		return err;
+
 slow_path_clean:
-                skb_walk_frags(skb, frag2) {
-                        if (frag2 == frag)
-                                break;
-                        frag2->sk = NULL;
-                        frag2->destructor = NULL;
-                        skb->truesize += frag2->truesize;
-                }
+		skb_walk_frags(skb, frag2) {
+			if (frag2 == frag)
+				break;
+			frag2->sk = NULL;
+			frag2->destructor = NULL;
+			skb->truesize += frag2->truesize;
+		}
 	}
 
 slow_path:
@@ -871,8 +871,8 @@ int ip_append_data(struct sock *sk,
 	    rt->u.dst.dev->features & NETIF_F_V4_CSUM &&
 	    !exthdrlen)
 		csummode = CHECKSUM_PARTIAL;
-		
-		skb = skb_peek_tail(&sk->sk_write_queue);
+
+	skb = skb_peek_tail(&sk->sk_write_queue);
 
 	inet->cork.length += length;
 	if (((length > mtu) || (skb && skb_is_gso(skb))) &&
@@ -1123,7 +1123,7 @@ ssize_t	ip_append_page(struct sock *sk, struct page *page,
 
 	inet->cork.length += size;
 	if ((size + skb->len > mtu) &&
-        (sk->sk_protocol == IPPROTO_UDP) &&
+	    (sk->sk_protocol == IPPROTO_UDP) &&
 	    (rt->u.dst.dev->features & NETIF_F_UFO)) {
 		skb_shinfo(skb)->gso_size = mtu - fragheaderlen;
 		skb_shinfo(skb)->gso_type = SKB_GSO_UDP;
@@ -1388,7 +1388,7 @@ void ip_send_reply(struct sock *sk, struct sk_buff *skb, struct ip_reply_arg *ar
 		ipc.opt = &replyopts.opt;
 
 		if (replyopts.opt.opt.srr)
-                        daddr = replyopts.opt.opt.faddr;
+			daddr = replyopts.opt.opt.faddr;
 	}
 
 	{

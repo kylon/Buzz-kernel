@@ -667,10 +667,10 @@ static ssize_t clusterip_proc_write(struct file *file, const char __user *input,
 	unsigned long nodenum;
 
 	if (size > PROC_WRITELEN)
-                return -EIO;
-        if (copy_from_user(buffer, input, size))
-                return -EFAULT;
-        buffer[size] = 0;
+		return -EIO;
+	if (copy_from_user(buffer, input, size))
+		return -EFAULT;
+	buffer[size] = 0;
 
 	if (*buffer == '+') {
 		nodenum = simple_strtoul(buffer+1, NULL, 10);

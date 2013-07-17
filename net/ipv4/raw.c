@@ -521,17 +521,17 @@ static int raw_sendmsg(struct kiocb *iocb, struct sock *sk, struct msghdr *msg,
 	ipc.addr = daddr;
 
 	if (!ipc.opt) {
-                struct ip_options_rcu *inet_opt;
- 
-                rcu_read_lock();
-                inet_opt = rcu_dereference(inet->inet_opt);
-                if (inet_opt) {
-                        memcpy(&opt_copy, inet_opt,
-                               sizeof(*inet_opt) + inet_opt->opt.optlen);
-                        ipc.opt = &opt_copy.opt;
-                }
-                rcu_read_unlock();
-        }
+		struct ip_options_rcu *inet_opt;
+
+		rcu_read_lock();
+		inet_opt = rcu_dereference(inet->inet_opt);
+		if (inet_opt) {
+			memcpy(&opt_copy, inet_opt,
+			       sizeof(*inet_opt) + inet_opt->opt.optlen);
+			ipc.opt = &opt_copy.opt;
+		}
+		rcu_read_unlock();
+	}
 
 	if (ipc.opt) {
 		err = -EINVAL;

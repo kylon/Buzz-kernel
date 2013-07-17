@@ -3970,7 +3970,7 @@ static void tcp_reset(struct sock *sk)
 		sk->sk_err = ECONNRESET;
 	}
 	/* This barrier is coupled with smp_rmb() in tcp_poll() */
-        smp_wmb();
+	smp_wmb();
 
 	if (!sock_flag(sk, SOCK_DEAD))
 		sk->sk_error_report(sk);
@@ -5240,8 +5240,8 @@ int tcp_rcv_established(struct sock *sk, struct sk_buff *skb,
 			    len - tcp_header_len <= tp->ucopy.len) {
 #ifdef CONFIG_NET_DMA
 				if (tp->ucopy.task == current &&
-                                    sock_owned_by_user(sk) &&
-                                    tcp_dma_try_early_copy(sk, skb, tcp_header_len)) {
+				    sock_owned_by_user(sk) &&
+				    tcp_dma_try_early_copy(sk, skb, tcp_header_len)) {
 					copied_early = 1;
 					eaten = 1;
 				}
@@ -5634,8 +5634,8 @@ int tcp_rcv_state_process(struct sock *sk, struct sk_buff *skb,
 			goto discard;
 
 		if (th->syn) {
-		        if (th->fin)
-                                goto discard;
+			if (th->fin)
+				goto discard;
 			if (icsk->icsk_af_ops->conn_request(sk, skb) < 0)
 				return 1;
 

@@ -231,8 +231,6 @@ void tcp_select_initial_window(int __space, __u32 mss,
 		if (*rcv_wnd > init_cwnd * mss)
 			*rcv_wnd = init_cwnd * mss;
 	}
-	/* Lock the initial TCP window size to 64K*/
-	*rcv_wnd = 64240;
 
 	/* Set the clamp no higher than max representable value */
 	(*window_clamp) = min(65535U << (*rcv_wscale), *window_clamp);
@@ -1394,10 +1392,10 @@ static int tcp_tso_should_defer(struct sock *sk, struct sk_buff *skb)
 	}
 
 	/* Ok, it looks like it is advisable to defer.
-         * Do not rearm the timer if already set to not break TCP ACK clocking.
-         */
-        if (!tp->tso_deferred)
-                tp->tso_deferred = 1 | (jiffies << 1);
+	 * Do not rearm the timer if already set to not break TCP ACK clocking.
+	 */
+	if (!tp->tso_deferred)
+		tp->tso_deferred = 1 | (jiffies << 1);
 
 	return 1;
 

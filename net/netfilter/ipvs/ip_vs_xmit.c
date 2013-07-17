@@ -67,10 +67,10 @@ __ip_vs_dst_check(struct ip_vs_dest *dest, u32 rtos, u32 cookie)
 static inline bool
 __mtu_check_toobig_v6(const struct sk_buff *skb, u32 mtu)
 {
-       if (skb->len > mtu && !skb_is_gso(skb)) {
-               return true; /* Packet size violate MTU size */
-       }
-       return false;
+	if (skb->len > mtu && !skb_is_gso(skb)) {
+		return true; /* Packet size violate MTU size */
+	}
+	return false;
 }
 
 static struct rtable *
@@ -255,7 +255,7 @@ ip_vs_bypass_xmit(struct sk_buff *skb, struct ip_vs_conn *cp,
 	/* MTU checking */
 	mtu = dst_mtu(&rt->u.dst);
 	if ((skb->len > mtu) && (iph->frag_off & htons(IP_DF)) &&
-            !skb_is_gso(skb)) {
+	    !skb_is_gso(skb)) {
 		ip_rt_put(rt);
 		icmp_send(skb, ICMP_DEST_UNREACH,ICMP_FRAG_NEEDED, htonl(mtu));
 		IP_VS_DBG_RL("%s(): frag needed\n", __func__);
@@ -572,7 +572,7 @@ ip_vs_tunnel_xmit(struct sk_buff *skb, struct ip_vs_conn *cp,
 	df |= (old_iph->frag_off & htons(IP_DF));
 
 	if ((old_iph->frag_off & htons(IP_DF) &&
-             mtu < ntohs(old_iph->tot_len) && !skb_is_gso(skb))) {
+	    mtu < ntohs(old_iph->tot_len) && !skb_is_gso(skb))) {
 		icmp_send(skb, ICMP_DEST_UNREACH,ICMP_FRAG_NEEDED, htonl(mtu));
 		ip_rt_put(rt);
 		IP_VS_DBG_RL("%s(): frag needed\n", __func__);
@@ -682,7 +682,7 @@ ip_vs_tunnel_xmit_v6(struct sk_buff *skb, struct ip_vs_conn *cp,
 		skb_dst(skb)->ops->update_pmtu(skb_dst(skb), mtu);
 
 	/* MTU checking: Notice that 'mtu' have been adjusted before hand */
-        if (__mtu_check_toobig_v6(skb, mtu)) {
+	if (__mtu_check_toobig_v6(skb, mtu)) {
 		icmpv6_send(skb, ICMPV6_PKT_TOOBIG, 0, mtu, skb->dev);
 		dst_release(&rt->u.dst);
 		IP_VS_DBG_RL("%s(): frag needed\n", __func__);
