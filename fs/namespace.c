@@ -1922,7 +1922,7 @@ long do_mount(char *dev_name, char *dir_name, char *type_page,
 	if (data_page)
 		((char *)data_page)[PAGE_SIZE - 1] = 0;
 
-	/* Default to noatime/nodiratime unless overriden */
+	/* Default to noatime unless overriden */
         if (!(flags & MNT_RELATIME))
            mnt_flags |= MNT_NOATIME; 
 
@@ -1934,10 +1934,8 @@ long do_mount(char *dev_name, char *dir_name, char *type_page,
 	if (flags & MS_NOEXEC)
 		mnt_flags |= MNT_NOEXEC;
 	if (flags & MNT_RELATIME)
-                mnt_flags |= MNT_RELATIME;
-        //if (flags & MS_NOATIME)
-                mnt_flags |= MNT_NOATIME;
-	//if (flags & MS_NODIRATIME)
+                mnt_flags |= MNT_RELATIME; 
+	if (flags & MS_NODIRATIME)
 		mnt_flags |= MNT_NODIRATIME;
 	if (flags & MS_STRICTATIME)
 		mnt_flags &= ~(MNT_RELATIME | MNT_NOATIME);
