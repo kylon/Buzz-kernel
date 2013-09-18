@@ -38,7 +38,8 @@
 
 /*
  * migrate_prep() needs to be called before we start compiling a list of pages
- * to be migrated using isolate_lru_page().
+ * to be migrated using isolate_lru_page(). If scheduling work on other CPUs is
+ * undesirable, use migrate_prep_local() 
  */
 int migrate_prep(void)
 {
@@ -52,6 +53,14 @@ int migrate_prep(void)
 
 	return 0;
 }
+
+/* Do the necessary work of migrate_prep but not if it involves other CPUs */
+int migrate_prep_local(void)
+{
+   lru_add_drain();
+ 
+   return 0;
+} 
 
 /*
  * Add isolated pages on the list back to the LRU under page lock
