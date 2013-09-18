@@ -150,7 +150,6 @@ enum {
 };
 
 #define SWAP_CLUSTER_MAX 32
-#define COMPACT_CLUSTER_MAX SWAP_CLUSTER_MAX 
 
 #define SWAP_MAP_MAX	0x7ffe
 #define SWAP_MAP_BAD	0x7fff
